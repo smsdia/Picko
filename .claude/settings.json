@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(git push:*)"
+    ],
+    "deny": [
+      "Read(./local.properties)",
+      "Read(./**/local.properties)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.jks)",
+      "Read(./**/secrets.properties)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-dangerous-git.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
