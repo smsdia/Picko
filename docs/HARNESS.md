@@ -35,9 +35,13 @@
 | --- | --- |
 | 자유롭게 허용 | 파일 읽기와 검색, 이 저장소 안의 코드·문서 수정, `./gradlew` 빌드·테스트·lint 실행, 문서 조회 |
 | 물어보고 진행 | 새 의존성 추가, Gradle·Manifest·권한 변경, `CLAUDE.md`와 `docs/` 규칙 문서 수정, 파일 삭제, 저장소 밖 파일 접근, 외부 서비스로 데이터를 보내는 작업 |
-| 금지 | `local.properties`와 키·시크릿 값의 읽기·출력·커밋, `git push`/`reset --hard`/`clean`/`branch -D`, 요청 없는 커밋, 요청 범위 밖의 대규모 리팩터링 |
+| 금지 | `local.properties`와 키·시크릿 값의 읽기·출력·커밋, 강제 푸시와 `reset --hard`/`clean -f`/`branch -D`/`checkout .`/`restore .`, 요청 없는 커밋·푸시, 요청 범위 밖의 대규모 리팩터링 |
 
-"금지"는 문서가 아니라 하네스가 막는다. 위험한 git 명령은 훅으로 차단하고, 비밀값 파일은 `.claude/settings.json`의 deny 권한으로 막는다. 이 설정은 프로젝트 생성 후 적용하며, 설정 파일을 바꾸기 직전에 사용자에게 확인한다. 설정 전까지는 이 표를 지침으로 따른다.
+"금지"는 문서가 아니라 하네스가 막는다. 설정은 `.claude/`에 있다.
+
+- `.claude/hooks/block-dangerous-git.sh`: 위험한 git 명령을 PreToolUse 훅으로 차단한다.
+- `.claude/settings.json`: `local.properties`, `.env`, `*.jks` 등 비밀값 파일 읽기를 deny하고, 일반 `git push`는 사용자가 요청한 경우에만 하며 매번 확인(ask)을 받는다.
+- 이 설정 파일을 바꾸기 직전에는 사용자에게 확인한다.
 
 ## 스킬
 

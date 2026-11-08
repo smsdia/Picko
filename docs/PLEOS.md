@@ -24,7 +24,7 @@
 ## 기술 요구
 
 - CCP(회전 컨트롤러) 지원, IME 창 리사이즈 대응, 오디오 포커스 관리.
-- 기준 환경: API 34, minSdk 28 이상. 에뮬레이터는 Pleos Connect Emulator.
+- 기준 환경: API 34, minSdk 28 이상. 프로젝트 설정은 `minSdk 28`, `targetSdk 34`이고, `compileSdk`는 최신 AndroidX가 요구하는 값(현재 37)을 쓴다. 에뮬레이터는 Pleos Connect Emulator.
 - 차량 상태 조회·제어 API는 권한과 지원 여부를 확인한다.
 
 ## 미확정

@@ -33,7 +33,7 @@ MVVM의 단일 소스(ViewModel)와 MVI의 단방향 흐름을 합친 방식이�
 ## DI
 
 - Hilt. 기능 패키지마다 `di/`에 모듈을 둔다.
-- 테스트와 SDK가 없는 환경에서는 `data/vehicle`의 가짜 구현으로 교체할 수 있어야 한다.
+- 테스트와 SDK가 없는 환경에서는 `data/vehicle`의 가짜 구현으로 교체할 수 있어야 한다. 가짜 구현은 `repositoryimpl/FakeVehicleRepository`이며, 실제 SDK 구현이 준비되면 `di/VehicleRepositoryModule`의 바인딩만 교체한다.
 
 ## 네이밍
 
