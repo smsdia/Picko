@@ -1,4 +1,4 @@
-package com.offcourse.pickitup.ui.theme
+package com.offcourse.pickitup.core.designsystem.theme
 
 import android.app.Activity
 import android.os.Build

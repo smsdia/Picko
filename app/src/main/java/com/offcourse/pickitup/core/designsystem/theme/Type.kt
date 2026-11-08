@@ -1,4 +1,4 @@
-package com.offcourse.pickitup.ui.theme
+package com.offcourse.pickitup.core.designsystem.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
