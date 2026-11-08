@@ -34,8 +34,24 @@
 - 화면 상태는 ViewModel에 두고, foreground/background 잦은 전환과 프로세스 재생성에서도 유지한다. 화면에서 사라져도 앱은 종료되지 않는다.
 - 이 분할 동작은 Pleos Connect Emulator에서만 확인할 수 있다. 폰 에뮬레이터로는 재현되지 않는다.
 
+## Back 하드 키 (문서상 필수)
+
+원문: vehicle-app-developer-guide/ccp-rotary-controller-development
+
+- 최상위 화면에서 Back이 눌리면 앱을 종료하지 않고 `moveTaskToBack(true)`로 숨긴다. `finish()`와 `finishAffinity()`는 쓰지 않는다. 종료 방식이 틀리면 심사에서 반려될 수 있다.
+- 하위 화면과 팝업에서는 먼저 정상적으로 뒤로 간다. Compose에서는 `BackHandler` 또는 `OnBackInvokedDispatcher` 계열 API를 쓴다.
+- 앱이 숨겨져도 프로세스가 종료될 수 있으므로 필요한 상태를 저장하고 복원한다.
+
+## CCP(로터리 컨트롤러)
+
+- 사전 설치 앱은 CCP 지원이 필수이고, 사용자 설치 앱(Pleos App Market)은 선택이다.
+- CCP를 지원하지 않으면 모든 필수 조작이 터치만으로 가능해야 하고, `<application>`에 `<meta-data android:name="com.hmg.rotary.ROTARY_SUPPORTED" android:value="false" />`를 선언한다.
+- CCP를 지원하면 모든 주요 UI에서 포커스 이동, 리스트 스크롤(회전), 선택(클릭), 뒤로가기가 되어야 하고 터치 전용 영역이 없어야 한다. 구현은 `focusable`, `FocusRequester`, `KeyEvent`를 쓴다.
+- 테스트는 Pleos Connect Emulator에서 한다.
+
 ## 미확정
 
 - Pleos 앱 마켓 심사·배포 정책 세부
-- CCP 요구가 이 앱에 적용되는지 여부
+- 배포 형태: 확정 전까지 Pleos App Market 배포(사용자 설치 앱)로 가정한다.
+- CCP 지원 여부: 미확정. 확정 전에는 CCP 관련 코드와 `ROTARY_SUPPORTED` 메타데이터를 추가하지 않는다. 필수 조작은 터치만으로도 가능하게 만든다.
 - 매니페스트 `screenOrientation` 설정의 정확한 의미와 윈도우 크기 수치 (원문과 에뮬레이터로 확인)
