@@ -27,7 +27,15 @@
 - 기준 환경: API 34, minSdk 28 이상. 프로젝트 설정은 `minSdk 28`, `targetSdk 34`이고, `compileSdk`는 최신 AndroidX가 요구하는 값(현재 37)을 쓴다. 에뮬레이터는 Pleos Connect Emulator.
 - 차량 상태 조회·제어 API는 권한과 지원 여부를 확인한다.
 
+## 화면 구성 (분할 창)
+
+- Pleos Connect는 앱 영역에 최대 2개 앱을 동시에 표시하고, 차량 정보를 보여 주는 Driving view는 고정이다. 앱은 가로·세로 모두에서 동작해야 하며 표시 영역이 바뀔 수 있다. (원문: vehicle-app-planning-guide/app-structure-screen-model, docs-design/getting-started/layout)
+- 레이아웃은 고정 크기를 피하고 가로·세로 모두에서 동작하게 만든다.
+- 화면 상태는 ViewModel에 두고, foreground/background 잦은 전환과 프로세스 재생성에서도 유지한다. 화면에서 사라져도 앱은 종료되지 않는다.
+- 이 분할 동작은 Pleos Connect Emulator에서만 확인할 수 있다. 폰 에뮬레이터로는 재현되지 않는다.
+
 ## 미확정
 
 - Pleos 앱 마켓 심사·배포 정책 세부
 - CCP 요구가 이 앱에 적용되는지 여부
+- 매니페스트 `screenOrientation` 설정의 정확한 의미와 윈도우 크기 수치 (원문과 에뮬레이터로 확인)

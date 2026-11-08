@@ -51,6 +51,12 @@ MVVM의 단일 소스(ViewModel)와 MVI의 단방향 흐름을 합친 방식이�
 
 - `data/vehicle`은 Pleos SDK 타입을 `domain`/`presentation`에 노출하지 않고 `XxxModel`로 변환해서 넘긴다. DTO 사용 여부는 SDK 추가 후 정한다.
 
+## 네비게이션
+
+- Navigation 2(`navigation-compose`)의 타입 안전 라우트를 쓴다. 라우트는 `@Serializable` `data object`/`data class`로 선언한다. Navigation 3는 쓰지 않는다.
+- 화면별 `presentation/<화면>/navigation/XxxNavigation.kt`에 라우트, `NavController.navigateToXxx()`, `NavGraphBuilder.xxxNavGraph()`를 두고, `MainScreen`의 `NavHost`에서 연결한다.
+- 화면 이동은 Route가 받은 람다로만 한다. Screen과 ViewModel은 `NavController`를 알지 못한다.
+
 ## 코드 컨벤션
 
 - Kotlin 공식 코드 스타일(`kotlin.code.style=official`)을 따른다. 별도 포매터·린터 도구는 프로토타입 이후에 검토한다.
@@ -81,5 +87,4 @@ MVVM의 단일 소스(ViewModel)와 MVI의 단방향 흐름을 합친 방식이�
 
 ## 미확정
 
-- 네비게이션 방식 (Navigation Compose 등)
 - 서체, 디자인 토큰, Figma 수치 변환 규칙 (디자인 시안 확정 후)
