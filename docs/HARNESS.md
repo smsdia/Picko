@@ -1,6 +1,6 @@
 # 개발 하네스
 
-에이전트가 변경을 반복 가능하게 구현하고 검증하는 작업 루프다. 요구사항은 제품 명세가, 계층 규칙은 [ARCHITECTURE.md](ARCHITECTURE.md)가 단일 기준이다.
+에이전트가 변경을 반복 가능하게 구현하고 검증하는 작업 루프다. 요구사항은 제품 명세가, 구조·코드 규칙은 [index](index.md)가 가리키는 문서가 단일 기준이다.
 
 ## 작업 루프
 
@@ -23,7 +23,7 @@
 | --- | --- |
 | 모든 Kotlin/Compose 코드 | `./gradlew testDebugUnitTest lintDebug assembleDebug` |
 | ViewModel / UiState | 이벤트별 UiState 전이를 단위 테스트로 고정한다. 차량 데이터는 가짜 repository로 대체한다. |
-| Kotlin/Compose 변경 후 | 변경한 파일을 직접 다시 읽고 [ARCHITECTURE.md](ARCHITECTURE.md)의 「코드 가독성」(파라미터 줄바꿈, 마지막 쉼표, Modifier 체인, 블록 사이 빈 줄)과 대조한다. |
+| Kotlin/Compose 변경 후 | 변경한 파일을 직접 다시 읽고 [code-style](conventions/code-style.md)의 「코드 가독성」(파라미터 줄바꿈, 마지막 쉼표, Modifier 체인, 블록 사이 빈 줄)과 대조한다. |
 | 구조 | 자동 검사는 아직 없다. 프로토타입 기간에는 변경 후 `data/vehicle` 밖의 Pleos SDK import와 계층 방향 위반을 직접 확인한다. |
 | 차량 연동 동작 | Pleos Connect Emulator에서 직접 확인하고, 결과에 에뮬레이터 검증 여부를 기록한다. 하지 못했으면 이유를 적는다. |
 
@@ -33,8 +33,8 @@
 
 | 구분 | 작업 |
 | --- | --- |
-| 자유롭게 허용 | 파일 읽기와 검색, 이 저장소 안의 코드·문서 수정, `./gradlew` 빌드·테스트·lint 실행, 문서 조회 |
-| 물어보고 진행 | 새 의존성 추가, Gradle·Manifest·권한 변경, `CLAUDE.md`와 `docs/` 규칙 문서 수정, 파일 삭제, 저장소 밖 파일 접근, 외부 서비스로 데이터를 보내는 작업 |
+| 자유롭게 허용 | 파일 읽기와 검색, 이 저장소 안의 코드 수정, 코드 변경으로 달라진 문서의 사실(경로, 이름, 예시) 갱신, `./gradlew` 빌드·테스트·lint 실행, 문서 조회 |
+| 물어보고 진행 | 새 의존성 추가, Gradle·Manifest·권한 변경, `AGENTS.md`와 `docs/architecture/`·`docs/conventions/`의 규칙을 새로 정하거나 바꾸는 수정, 파일 삭제, 저장소 밖 파일 접근, 외부 서비스로 데이터를 보내는 작업 |
 | 금지 | `local.properties`와 키·시크릿 값의 읽기·출력·커밋, 강제 푸시와 `reset --hard`/`clean -f`/`branch -D`/`checkout .`/`restore .`, 요청 없는 커밋·푸시, 요청 범위 밖의 대규모 리팩터링 |
 
 "금지"는 문서가 아니라 하네스가 막는다. 설정은 `.claude/`에 있다.

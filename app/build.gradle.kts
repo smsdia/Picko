@@ -19,13 +19,13 @@ val localProperties = Properties().apply {
 fun localProperty(key: String): String = localProperties.getProperty(key).orEmpty()
 
 android {
-    namespace = "com.offcourse.pickitup"
+    namespace = "com.offcourse.picko"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.offcourse.pickitup"
+        applicationId = "com.offcourse.picko"
         // Pleos Connect 기준: API 34, minSdk 28 이상 (docs/PLEOS.md)
         minSdk = 28
         targetSdk = 34
