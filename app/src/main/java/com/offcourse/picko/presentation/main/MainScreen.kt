@@ -1,4 +1,4 @@
-package com.offcourse.pickitup.presentation.main
+package com.offcourse.picko.presentation.main
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -8,8 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.offcourse.pickitup.R
-import com.offcourse.pickitup.core.designsystem.theme.PickItUpTheme
+import com.offcourse.picko.R
+import com.offcourse.picko.core.designsystem.theme.PickoTheme
 
 // 네비게이션 연결점. 첫 화면이 생기면 NavHost 를 여기에 구성한다.
 @Composable
@@ -27,7 +27,7 @@ fun MainScreen() {
 @Preview(showBackground = true)
 @Composable
 private fun MainScreenPreview() {
-    PickItUpTheme {
+    PickoTheme {
         MainScreen()
     }
 }

@@ -1,7 +1,7 @@
-package com.offcourse.pickitup.data.vehicle.di
+package com.offcourse.picko.data.vehicle.di
 
-import com.offcourse.pickitup.data.vehicle.repository.VehicleRepository
-import com.offcourse.pickitup.data.vehicle.repositoryimpl.FakeVehicleRepository
+import com.offcourse.picko.data.vehicle.repository.VehicleRepository
+import com.offcourse.picko.data.vehicle.repositoryimpl.FakeVehicleRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

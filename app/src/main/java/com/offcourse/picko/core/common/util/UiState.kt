@@ -1,4 +1,4 @@
-package com.offcourse.pickitup.core.common.util
+package com.offcourse.picko.core.common.util
 
 import androidx.compose.runtime.Immutable
 

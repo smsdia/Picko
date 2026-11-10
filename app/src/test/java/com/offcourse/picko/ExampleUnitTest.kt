@@ -1,4 +1,4 @@
-package com.offcourse.pickitup
+package com.offcourse.picko
 
 import org.junit.Test
 

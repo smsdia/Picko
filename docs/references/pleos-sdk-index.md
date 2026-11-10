@@ -3,7 +3,7 @@
 > 출처: https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/ (확인일 2026-11-08)
 > 이 파일은 원문 복사가 아니라 **요약**이다. 문서 저작권은 Hyundai Motor Group에 있다. 구현 전에 해당 원문 페이지를 열어 시그니처를 확인한다. 요약에 없는 API는 존재한다고 가정하지 않는다.
 
-## SDK 목록 (바로태움 관련도)
+## SDK 목록 (Picko 관련도)
 
 | SDK | 버전(확인 시점) | 용도 | 관련도 | 원문 |
 | --- | --- | --- | --- | --- |

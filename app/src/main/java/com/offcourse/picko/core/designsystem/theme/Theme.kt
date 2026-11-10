@@ -1,4 +1,4 @@
-package com.offcourse.pickitup.core.designsystem.theme
+package com.offcourse.picko.core.designsystem.theme
 
 import android.app.Activity
 import android.os.Build
@@ -34,7 +34,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun PickItUpTheme(
+fun PickoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,

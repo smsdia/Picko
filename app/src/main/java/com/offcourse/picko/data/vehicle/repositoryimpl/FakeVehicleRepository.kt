@@ -1,7 +1,7 @@
-package com.offcourse.pickitup.data.vehicle.repositoryimpl
+package com.offcourse.picko.data.vehicle.repositoryimpl
 
-import com.offcourse.pickitup.data.vehicle.model.VehicleLocation
-import com.offcourse.pickitup.data.vehicle.repository.VehicleRepository
+import com.offcourse.picko.data.vehicle.model.VehicleLocation
+import com.offcourse.picko.data.vehicle.repository.VehicleRepository
 import javax.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow

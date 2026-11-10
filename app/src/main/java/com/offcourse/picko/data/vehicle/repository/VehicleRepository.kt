@@ -1,6 +1,6 @@
-package com.offcourse.pickitup.data.vehicle.repository
+package com.offcourse.picko.data.vehicle.repository
 
-import com.offcourse.pickitup.data.vehicle.model.VehicleLocation
+import com.offcourse.picko.data.vehicle.model.VehicleLocation
 import kotlinx.coroutines.flow.Flow
 
 interface VehicleRepository {

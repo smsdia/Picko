@@ -1,11 +1,11 @@
-package com.offcourse.pickitup
+package com.offcourse.picko
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
 @HiltAndroidApp
-class PickItUpApplication : Application() {
+class PickoApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
