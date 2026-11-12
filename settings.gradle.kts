@@ -24,6 +24,11 @@ dependencyResolutionManagement {
                 includeGroup("ai.pleos.playground")
             }
         }
+        maven("https://devrepo.kakao.com/nexus/repository/kakaomap-releases/") {
+            content {
+                includeGroup("com.kakao.maps.open")
+            }
+        }
     }
 }
 

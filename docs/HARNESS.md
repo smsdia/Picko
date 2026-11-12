@@ -26,6 +26,7 @@
 | Kotlin/Compose 변경 후 | 변경한 파일을 직접 다시 읽고 [code-style](conventions/code-style.md)의 「코드 가독성」(파라미터 줄바꿈, 마지막 쉼표, Modifier 체인, 블록 사이 빈 줄)과 대조한다. |
 | 구조 | 자동 검사는 아직 없다. 프로토타입 기간에는 변경 후 `data/vehicle` 밖의 Pleos SDK import와 계층 방향 위반을 직접 확인한다. |
 | 차량 연동 동작 | Pleos Connect Emulator에서 직접 확인하고, 결과에 에뮬레이터 검증 여부를 기록한다. 하지 못했으면 이유를 적는다. |
+| Gleo 연동 (`schema.json`, 수신 intent-filter, 수신 코드) | 에뮬레이터에서 실제 음성 호출로 확인한다. Gleo 호출은 `adb shell cmd voiceinteraction show`(호출어 없는 PTT)로 시작하고 삐 소리 뒤에 말한다. 수신만 따로 볼 때는 `adb`로 같은 intent를 보낸다 (명령과 action 이름 규칙은 [pleos-sdk-index](references/pleos-sdk-index.md)). 음성 호출을 하지 못했으면 이유를 적고 "미검증"으로 기록한다. |
 
 릴리스 빌드, 커스텀 가독성 테스트 같은 추가 게이트는 실제 문제가 반복될 때 승격한다. 구조·네이밍 규칙의 자동 강제(Konsist 등)는 프로토타입 이후 점검한다.
 
