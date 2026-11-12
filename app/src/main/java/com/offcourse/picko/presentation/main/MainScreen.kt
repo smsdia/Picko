@@ -1,126 +1,79 @@
 package com.offcourse.picko.presentation.main
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.offcourse.picko.R
-import com.offcourse.picko.core.common.util.UiState
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavDestination.Companion.hasRoute
 import com.offcourse.picko.core.designsystem.theme.PickoTheme
-import com.offcourse.picko.data.contact.model.ContactLookupResult
-import com.offcourse.picko.presentation.main.component.PickupMap
+import com.offcourse.picko.data.gleo.model.PickupRequestModel
+import com.offcourse.picko.presentation.home.navigation.HomeDestination
+import com.offcourse.picko.presentation.home.navigation.homeNavGraph
+import com.offcourse.picko.presentation.pickup.navigation.PickupFlowDestination
+import com.offcourse.picko.presentation.pickup.navigation.navigateToPickupFlow
+import com.offcourse.picko.presentation.pickup.navigation.pickupNavGraph
+import com.offcourse.picko.presentation.splash.navigation.SplashDestination
+import com.offcourse.picko.presentation.splash.navigation.splashNavGraph
+import kotlinx.coroutines.flow.Flow
 
-private const val PHONE_SUFFIX_LENGTH = 4
-
-// 네비게이션 연결점. 첫 화면이 생기면 NavHost 를 여기에 구성한다.
+/** 네비게이션 연결점. 스플래시, 홈, 픽업 흐름을 하나의 NavHost 로 잇는다. */
 @Composable
-fun MainScreen(
-    state: MainState,
-    onMapError: (Exception) -> Unit,
-    onRequestContactPermission: () -> Unit,
-) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(16.dp),
-        ) {
-            Text(text = stringResource(R.string.app_name))
+fun MainScreen(sideEffect: Flow<MainSideEffect>) {
+    val navController = rememberNavController()
 
-            val request = state.pickupRequest
-
-            Text(
-                text = when {
-                    request != null -> stringResource(
-                        R.string.main_pickup_received,
-                        request.passenger,
-                        request.place ?: stringResource(R.string.main_pickup_place_current),
-                    )
-
-                    state.isGleoActionReceived -> stringResource(R.string.main_pickup_invalid)
-                    else -> stringResource(R.string.main_gleo_waiting)
-                },
-            )
-
-            ContactLookupContent(
-                lookup = state.contactLookup,
-                onRequestContactPermission = onRequestContactPermission,
-            )
-
-            if (state.isMapFailed) {
-                Text(text = stringResource(R.string.main_map_error))
-            } else if (!LocalInspectionMode.current) {
-                // 카카오 지도는 Preview 에서 그릴 수 없다.
-                PickupMap(
-                    spot = state.pickupSpot,
-                    onMapError = onMapError,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                )
+    LaunchedEffect(navController, sideEffect) {
+        sideEffect.collect { effect ->
+            when (effect) {
+                is MainSideEffect.StartPickup -> navController.startPickup(effect.request)
             }
         }
     }
-}
 
-@Composable
-private fun ContactLookupContent(
-    lookup: UiState<ContactLookupResult>?,
-    onRequestContactPermission: () -> Unit,
-) {
-    when (lookup) {
-        null -> Unit
-
-        UiState.Loading -> Text(text = stringResource(R.string.main_contact_loading))
-
-        is UiState.Success -> Text(
-            text = when (val result = lookup.data) {
-                is ContactLookupResult.Found -> stringResource(
-                    R.string.main_contact_found,
-                    result.contact.phoneNumber.filter(Char::isDigit).takeLast(PHONE_SUFFIX_LENGTH),
-                )
-
-                ContactLookupResult.NotFound -> stringResource(R.string.main_contact_not_found)
-
-                is ContactLookupResult.Multiple -> stringResource(
-                    R.string.main_contact_multiple,
-                    result.candidates.size,
-                )
+    NavHost(
+        navController = navController,
+        startDestination = SplashDestination,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PickoTheme.colors.background)
+            .windowInsetsPadding(WindowInsets.safeDrawing),
+    ) {
+        splashNavGraph(
+            onFinished = {
+                navController.navigate(HomeDestination) {
+                    popUpTo<SplashDestination> { inclusive = true }
+                }
             },
         )
 
-        is UiState.Error -> if (lookup.throwable is SecurityException) {
-            Text(text = stringResource(R.string.main_contact_permission_needed))
+        homeNavGraph()
 
-            Button(onClick = onRequestContactPermission) {
-                Text(text = stringResource(R.string.main_contact_permission_request))
-            }
-        } else {
-            Text(text = stringResource(R.string.main_contact_error))
-        }
+        pickupNavGraph(
+            navController = navController,
+            // 처음 화면(홈)으로 돌아간다. 흐름 그래프가 pop 되면서 흐름의 ViewModel 도 함께 사라진다.
+            onFlowFinished = { navController.popBackStack<PickupFlowDestination>(inclusive = true) },
+        )
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun MainScreenPreview() {
-    PickoTheme {
-        MainScreen(
-            state = MainState(),
-            onMapError = {},
-            onRequestContactPermission = {},
-        )
+/**
+ * 새 픽업 흐름을 시작한다. 진행 중이던 흐름은 버린다.
+ * 스플래시 중에 호출되면 스플래시를 홈으로 바꾼 뒤 그 위에 흐름을 올려, 뒤로 가면 홈으로 돌아가게 한다.
+ */
+private fun NavController.startPickup(request: PickupRequestModel) {
+    if (currentDestination?.hasRoute<SplashDestination>() == true) {
+        navigate(HomeDestination) {
+            popUpTo<SplashDestination> { inclusive = true }
+        }
+    }
+
+    navigateToPickupFlow(request) {
+        popUpTo<PickupFlowDestination> { inclusive = true }
     }
 }
