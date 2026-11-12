@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.offcourse.picko.R
 import com.offcourse.picko.core.common.extensions.dropShadowLevel1
 import com.offcourse.picko.core.designsystem.component.PickoCarPreview
@@ -64,7 +65,7 @@ fun PickoContactActionCard(
 
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = name,
@@ -73,7 +74,8 @@ fun PickoContactActionCard(
             )
             Text(
                 text = phone,
-                style = PickoTheme.typography.label.labelLarge,
+                // labelLarge의 줄 높이(24sp)가 글자(32)보다 작아 이름과 붙어 보이므로 늘려 쓴다.
+                style = PickoTheme.typography.label.labelLarge.copy(lineHeight = 40.sp),
                 color = colors.textSecondary,
             )
         }

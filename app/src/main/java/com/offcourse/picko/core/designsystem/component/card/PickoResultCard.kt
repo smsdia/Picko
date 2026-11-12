@@ -2,6 +2,8 @@ package com.offcourse.picko.core.designsystem.component.card
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +42,7 @@ private val ResultCardShape = RoundedCornerShape(28.dp)
 /**
  * 번호, 내용, 선택 표시로 이루어진 결과 카드의 뼈대. 내용은 [content]에 채운다.
  * 연락처, 장소, 주변 장소 카드는 아래의 전용 함수를 쓴다.
+ * 누르고 있는 동안에는 [isSelected]와 같은 모양(테두리와 체크)으로 보인다.
  */
 @Composable
 fun PickoResultCard(
@@ -48,8 +53,11 @@ fun PickoResultCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = PickoTheme.colors
-    val surface = if (isSelected) colors.surfaceRaised else colors.surfaceCard
-    val border = if (isSelected) 3.75.dp to colors.borderSelected else 1.25.dp to colors.borderCard
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val highlighted = isSelected || isPressed
+    val surface = if (highlighted) colors.surfaceRaised else colors.surfaceCard
+    val border = if (highlighted) 3.75.dp to colors.borderSelected else 1.25.dp to colors.borderCard
 
     Row(
         modifier = modifier
@@ -60,6 +68,9 @@ fun PickoResultCard(
             .border(border.first, border.second, ResultCardShape)
             .selectable(
                 selected = isSelected,
+                interactionSource = interactionSource,
+                // 눌림은 테두리와 체크로 보여 주므로 기본 누름 효과는 끈다.
+                indication = null,
                 role = Role.RadioButton,
                 onClick = onClick,
             )
@@ -85,7 +96,7 @@ fun PickoResultCard(
             content = content,
         )
 
-        if (isSelected) {
+        if (highlighted) {
             Icon(
                 imageVector = PickoIcons.Check,
                 contentDescription = null,

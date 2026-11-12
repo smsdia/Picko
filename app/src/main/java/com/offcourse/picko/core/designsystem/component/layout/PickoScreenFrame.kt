@@ -3,6 +3,7 @@ package com.offcourse.picko.core.designsystem.component.layout
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.dp
+import com.offcourse.picko.core.common.extensions.dropShadowLevel1
 import com.offcourse.picko.core.designsystem.icon.PickoIcons
 import com.offcourse.picko.core.designsystem.theme.PickoTheme
 
@@ -35,19 +37,26 @@ private val ContentMaxWidth = 1520.dp
 /**
  * 픽업 흐름 화면의 공통 틀. 그라데이션 배경 위에 로고 머리글과 구분선을 두고, 그 아래에 내용을 놓는다.
  * 내용은 [ContentMaxWidth]까지만 넓어지고 가운데에 맞춘다.
+ * [decoration]은 머리글과 무관하게 창 전체(왼쪽 위가 원점)를 기준으로 배치할 장식을 배경 위, 내용 아래에 그린다.
+ * [overlay]는 내용 위에 창 전체를 덮는다(dim 이 있는 안내 등). 내용 영역이 아니라 창 크기를 채운다.
  */
 @Composable
 fun PickoScreenFrame(
     modifier: Modifier = Modifier,
     showHeader: Boolean = true,
+    decoration: @Composable BoxScope.() -> Unit = {},
+    overlay: @Composable BoxScope.() -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val colors = PickoTheme.colors
+    val shape = RoundedCornerShape(FrameCorner)
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(FrameCorner)),
+            // Figma `application`의 shadow_level1. 창 바깥에 그려지므로 창이 화면 가장자리에 붙어 있으면 잘려 보일 수 있다.
+            .dropShadowLevel1(shape)
+            .clip(shape),
     ) {
         Image(
             bitmap = ImageBitmap.imageResource(PickoTheme.images.gradientBackground),
@@ -55,6 +64,8 @@ fun PickoScreenFrame(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
         )
+
+        decoration()
 
         Column(modifier = Modifier.fillMaxSize()) {
             if (showHeader) {
@@ -99,5 +110,7 @@ fun PickoScreenFrame(
                 }
             }
         }
+
+        overlay()
     }
 }
