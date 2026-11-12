@@ -13,6 +13,7 @@
 | Pleos 앱 카테고리, 주행 제한, 디자인, 기기 환경 | [PLEOS](PLEOS.md) |
 | 키, 토큰, 개인정보, 로그 | [SECURITY](SECURITY.md) |
 | Pleos SDK 목록, 진입점, 권한 (SDK 코드를 쓰기 전) | [pleos-sdk-index](references/pleos-sdk-index.md) |
+| 카카오 지도 (지도, POI, 키 해시) | [kakao-maps](references/kakao-maps.md) |
 
 | 폴더 | 담는 것 |
 | --- | --- |

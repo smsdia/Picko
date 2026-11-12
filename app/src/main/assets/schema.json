@@ -1,0 +1,29 @@
+{
+  "packageName": "com.offcourse.picko",
+  "appDescription": "A pickup assistant that recommends a safe place for the vehicle to stop and pick up a passenger.",
+  "version": "1.0",
+  "actionCalls": [
+    {
+      "type": "function",
+      "function": {
+        "name": "REQUEST_PICKUP",
+        "description": "Request to pick up a passenger, optionally near a given place.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "passenger": {
+              "type": "string",
+              "description": "Name of the person to pick up, as the driver says it (for example a contact name or a relationship like mom)."
+            },
+            "place": {
+              "type": "string",
+              "description": "Name of the place near which the pickup is wanted. Omit to use the current location."
+            }
+          },
+          "required": ["passenger"]
+        },
+        "component": "activity"
+      }
+    }
+  ]
+}

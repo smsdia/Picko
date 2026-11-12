@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Picko</string>
+
+    <!-- 메인 (Gleo 연동 확인용) -->
+    <string name="main_gleo_waiting">Gleo 호출을 기다리는 중이에요.</string>
+    <string name="main_pickup_received">%1$s님 픽업 요청을 받았어요. 장소: %2$s</string>
+    <string name="main_pickup_place_current">현재 위치</string>
+    <string name="main_pickup_invalid">픽업 요청을 읽지 못했어요.</string>
+    <string name="main_contact_loading">연락처를 찾는 중이에요.</string>
+    <string name="main_contact_found">연락처를 찾았어요. 번호 끝 4자리: %1$s</string>
+    <string name="main_contact_not_found">연락처에서 찾지 못했어요.</string>
+    <string name="main_contact_multiple">같은 이름의 연락처가 %1$d개 있어요.</string>
+    <string name="main_contact_permission_needed">연락처를 읽으려면 권한이 필요해요.</string>
+    <string name="main_contact_permission_request">연락처 권한 허용</string>
+    <string name="main_contact_error">연락처를 읽지 못했어요.</string>
+    <string name="main_map_error">지도를 불러오지 못했어요.</string>
 </resources>
