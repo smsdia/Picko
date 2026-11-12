@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PickoTheme {
-                MainScreen(sideEffect = viewModel.sideEffect)
+                MainApp()
             }
         }
     }
