@@ -71,6 +71,8 @@ dependencies {
 
     implementation(libs.timber)
     implementation(libs.pleos.fused.location)
+    implementation(libs.pleos.speech.to.text)
+    implementation(libs.pleos.text.to.speech)
     implementation(libs.kakao.maps)
 
     testImplementation(libs.bundles.unitTest)
