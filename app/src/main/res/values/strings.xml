@@ -23,7 +23,23 @@
     <string name="home_voice_title">누구를 픽업하러 가시나요?</string>
     <string name="home_voice_subtitle">아래 예시처럼 픽업할 사람과 장소를 말씀해 주세요.</string>
     <string name="home_voice_label">음성으로 픽업 요청</string>
-    <string name="home_voice_example">“대치동 학원가에서 현대를 태울 거야”</string>
+    <string-array name="home_voice_examples">
+        <item>“Gleo야, 대치동 학원가에서 현대 태울 거야.”</item>
+        <item>“Gleo야, 대치동 학원가에서 현대를 픽업하려고 해.”</item>
+        <item>“Gleo야, 현대 픽업할 장소 좀 추천해 줘.”</item>
+        <item>“Gleo야, 현대를 태우러 가는데 어디서 만나면 좋을까?”</item>
+        <item>“Gleo야, 대치동 학원가에서 현대를 태울 수 있는 곳 알려줘.”</item>
+        <item>“Gleo야, 현대 픽업할 수 있도록 최적의 장소로 안내해 줘.”</item>
+        <item>“Gleo야, 현대와 만나기로 했는데 픽업 장소 정하는 것 좀 도와줘.”</item>
+    </string-array>
+    <string name="home_voice_listening">듣고 있어요. 말씀해 주세요.</string>
+    <string name="home_voice_not_understood">잘 알아듣지 못했어요. 마이크를 눌러 다시 말씀해 주세요.</string>
+    <string name="home_voice_contact_not_found">연락처를 찾지 못했어요. 이름을 다시 말씀해 주세요.</string>
+    <string name="voice_announce_not_understood">잘 알아듣지 못했어요. 다시 말씀해 주세요.</string>
+    <string name="home_voice_timeout">말씀이 들리지 않았어요. 마이크를 눌러 다시 말씀해 주세요.</string>
+    <string name="home_voice_network">네트워크 연결을 확인하고 마이크를 눌러 다시 시도해 주세요.</string>
+    <string name="home_voice_microphone">마이크를 사용할 수 없어요. 마이크를 눌러 다시 시도해 주세요.</string>
+    <string name="home_voice_failed">음성 인식에 실패했어요. 마이크를 눌러 다시 시도해 주세요.</string>
     <string name="home_voice_cancel">취소하기</string>
 
     <!-- 픽업 흐름: 공통 -->

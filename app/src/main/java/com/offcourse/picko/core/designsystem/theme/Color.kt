@@ -60,7 +60,7 @@ val BlueIceAlpha66 = Color(0xA8E4F0FF) // 66%
 val BluePaleAlpha90 = Color(0xE6D9E9FF) // 90%
 val BlueSkyAlpha30 = Color(0x4DCCE8FF) // 30%
 val BlueMistAlpha30 = Color(0x4DBAD6FF) // 30%
-val OverlayDim75 = Color(0xBF090E1B) // 75%
+val OverlayDim65 = Color(0xA6090E1B) // 65%
 
 // Other / UI
 val NavyBlue = Color(0xFF173A75)
@@ -336,7 +336,7 @@ val lightPickoColors = PickoColors(
     glassBorder = GlassBorder,
     ctaBorder = BlueIceAlpha66,
     buttonSecondaryBorder = BluePaleAlpha90,
-    overlayDim = OverlayDim75,
+    overlayDim = OverlayDim65,
 
     buttonPrimary = ButtonPrimaryLightGradient,
     buttonSecondary = ButtonSecondaryLightGradient,
@@ -409,7 +409,7 @@ val darkPickoColors = PickoColors(
     glassBorder = GlassBorder,
     ctaBorder = BlueSkyAlpha30,
     buttonSecondaryBorder = BlueMistAlpha30,
-    overlayDim = OverlayDim75,
+    overlayDim = OverlayDim65,
 
     buttonPrimary = ButtonPrimaryDarkGradient,
     buttonSecondary = ButtonSecondaryDarkGradient,
