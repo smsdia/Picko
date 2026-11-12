@@ -2,13 +2,14 @@
 
 | 작업 | 읽을 문서 |
 | --- | --- |
-| 패키지 구조, 의존성 방향, Repository, Pleos SDK 경계, Fake·Hilt 교체 | [data-layer](architecture/data-layer.md) |
+| 패키지 구조, 의존성 방향, Repository, Pleos SDK 경계, Fake·Hilt 교체, 로컬 저장(DataStore) | [data-layer](architecture/data-layer.md) |
 | UseCase를 만들지 말지, 비즈니스 정책 | [domain-layer](architecture/domain-layer.md) |
-| Route, Screen, State, SideEffect, Action, ScreenState, ViewModel | [presentation](architecture/presentation.md) |
-| NavHost, 화면 이동, Back | [navigation](architecture/navigation.md) |
+| Route, Screen, State, SideEffect, Action, ScreenState, ViewModel, 흐름 범위 ViewModel | [presentation](architecture/presentation.md) |
+| NavHost, 화면 이동, Back, 흐름 그래프 | [navigation](architecture/navigation.md) |
 | 클래스, 파일, 패키지 이름 | [naming](conventions/naming.md) |
 | 코드 스타일, 주석, 코드 가독성 | [code-style](conventions/code-style.md) |
 | 문자열, `contentDescription` | [resources](conventions/resources.md) |
+| 색상, 타이포그래피, 테마, 다크 모드, 그라데이션, 이미지, 디자인 시스템 컴포넌트 | [design-system](conventions/design-system.md) |
 | 작업 루프, 검증 게이트, 권한과 승인 | [HARNESS](HARNESS.md) |
 | Pleos 앱 카테고리, 주행 제한, 디자인, 기기 환경 | [PLEOS](PLEOS.md) |
 | 키, 토큰, 개인정보, 로그 | [SECURITY](SECURITY.md) |
