@@ -23,6 +23,8 @@ timber = "5.0.1"
 
 # Pleos SDK
 pleosFusedLocation = "1.1.3"
+pleosSpeechToText = "3.3.1"
+pleosTextToSpeech = "3.3.1"
 
 # Kakao
 kakaoMaps = "2.15.2"
@@ -69,8 +71,10 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 # Timber
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 
-# Pleos SDK (data/vehicle 에서만 사용한다)
+# Pleos SDK (data/vehicle, data/speech 에서만 사용한다)
 pleos-fused-location = { group = "ai.pleos.playground", name = "FusedLocation", version.ref = "pleosFusedLocation" }
+pleos-speech-to-text = { group = "ai.pleos.playground", name = "SpeechToText", version.ref = "pleosSpeechToText" }
+pleos-text-to-speech = { group = "ai.pleos.playground", name = "TextToSpeech", version.ref = "pleosTextToSpeech" }
 
 # Kakao 지도
 kakao-maps = { group = "com.kakao.maps.open", name = "android", version.ref = "kakaoMaps" }

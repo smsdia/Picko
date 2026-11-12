@@ -9,8 +9,8 @@
 | --- | --- | --- | --- | --- |
 | FusedLocation | v1.1.3 | 차량 위치 | 핵심 | `/docs/pleos-only/connect-sdk-pleos/FusedLocation/intro` |
 | NaviHelper | v3.0.5 | 목적지·경로·주행 상태 | 핵심 | `/docs/pleos-only/connect-sdk-pleos/NaviHelper/intro` |
-| SpeechToText | 미확인 | 음성 인식 | 핵심 | `/docs/pleos-only/connect-sdk-pleos/SpeechToText/intro` |
-| TextToSpeech | 미확인 | 음성 합성 | 핵심 | `/docs/pleos-only/connect-sdk-pleos/TextToSpeech/intro` |
+| SpeechToText | v3.3.1 | 음성 인식 | 핵심 | `/docs/pleos-only/connect-sdk-pleos/SpeechToText/intro` |
+| TextToSpeech | v3.3.1 | 음성 합성 | 핵심 | `/docs/pleos-only/connect-sdk-pleos/TextToSpeech/intro` |
 | Vehicle | SDK v2.3.2 / Service v2.3.21 | 차량 정보 조회·제어 | 차량 정보 안내용 | `/docs/pleos-only/connect-sdk-pleos/Vehicle/intro` |
 | Gleo Interface | - | Gleo AI 음성 명령 연동(App Schema) | 핵심 | `/docs/pleos-only/app-integration-guide/guide/core-concepts` |
 
@@ -30,10 +30,27 @@
 
 ## SpeechToText
 
-- 진입점 `ai.pleos.playground.stt.SpeechToText`, 생성 예: `SpeechToText(applicationContext, Mode.HYBRID)`
-- 메서드: `initialize()`, `addListener()`, `setLocale()`, `request()`, `stop()`, `removeListener()`, `release()`
-- `Mode`: HYBRID, SERVER, ON_DEVICE. 결과는 `ResultListener`
-- 음성을 텍스트로만 바꾼다. 인식한 명령으로 앱 기능을 실행하려면 Gleo Interface를 쓴다.
+- 좌표 `ai.pleos.playground:SpeechToText:3.3.1` (Pleos Maven). 이 라이브러리가 `ai.pleos.playground.security:universal-access:0.6.0`을 의존해서, 저장소 필터는 `ai.pleos.playground`의 하위 그룹까지 허용해야 한다(`settings.gradle.kts`).
+- 권한: `pleos.car.permission.STT_SERVICE` (런타임 권한은 문서에 없다). 선언하지 않으면 초기화나 호출이 실패할 수 있다.
+- 진입점 `ai.pleos.playground.stt.SpeechToText`, 생성 예: `SpeechToText(applicationContext, Mode.HYBRID)`. 패키지: `stt.constant`(`Mode`, `ErrorType`), `stt.listener`(`ResultListener`, `OnInitializeListener`, `OnServerConnectionListener`)
+- 사용 순서: 생성 → `initialize(OnInitializeListener)` → `registerApp(clientID, clientSecret, OnServerConnectionListener)` → `onConnected()` 뒤에 `setLocale(Locale.KOREA)`, `addListener(ResultListener)`, `request()` → 끝나면 `stop()`, `removeListener()`, `release()`. `release()` 뒤에 다시 쓰려면 새 객체를 만든다. `setLocale`은 `request()` 전에 한다.
+- `Mode`: HYBRID(기본, 서버 우선, 앱 등록 필수), SERVER(앱 등록 필수), ON_DEVICE(앱 등록 선택). 클라이언트 ID/시크릿은 Pleos Playground My Project에서 발급한다.
+- `ResultListener`: `onReady()`, `onStartedRecognition()`, `onUpdated(stt: String, completed: Boolean)`, `onUpdatedEpdData(on, off)`, `onUpdatedRms(rms)`, `onEndedRecognition()`, `onError(ErrorType)`. 신뢰도 필드는 없다. `request()`가 마이크를 켠다.
+- `ErrorType`: AUDIO_ERROR, INVALID_REQUEST_ERROR, MIC_ERROR, NETWORK_ERROR, NOT_SUPPORTED_API, ON_DEVICE_ENGINE_ERROR, PERMISSION_DENIED, SERVER_INTERNAL_ERROR, TIMEOUT, UNAUTHENTICATED, UNAVAILABLE_LANGUAGE, UNKNOWN
+- 음성을 텍스트로만 바꾼다. 사람과 장소 같은 값은 앱이 문장에서 읽어야 한다(`SpokenPickupParser`).
+- 에뮬레이터 확인(2026-11-13): 홈 음성 대기 화면에서 `initialize` → `registerApp`(인증 통과) → `setLocale ko_KR` → `request` → 마이크 녹음 시작까지 로그로 확인했다. 최종 결과(`onUpdated`의 `completed=true`)와 `onEndedRecognition`의 순서는 아직 확인하지 못했다.
+- 문서에 없는 것: 무음 자동 종료 시간(앱이 15초 안에 끝나지 않으면 직접 끝낸다), `onUpdated`의 `completed`와 `onEndedRecognition`의 호출 순서.
+
+## TextToSpeech
+
+- 좌표 `ai.pleos.playground:TextToSpeech:3.3.1` (Pleos Maven). 권한 `pleos.car.permission.TTS_SERVICE` (런타임 권한은 문서에 없다).
+- 진입점 `ai.pleos.playground.tts.TextToSpeech`, 생성 `TextToSpeech(context, Mode)`. 패키지: `tts.constant`(`Mode`, `ErrorType`), `tts.listener`(`EventListener`, `OnInitializeListener`, `OnServerConnectionListener`)
+- 사용 순서: 생성 → `initialize(OnInitializeListener)` → (서버 모드만 `registerApp`) → `setLocale(Locale.KOREA)`, `addEventListener(EventListener)` → `speak(text, isFinal = true)` → 끝나면 `stop()`, `removeEventListener()`, `release()`. `release()` 뒤에 다시 쓰려면 새 객체를 만든다.
+- `Mode`: HYBRID(서버 우선, 서버를 쓰려면 앱 등록 필요), SERVER(앱 등록 필수), ON_DEVICE(등록 불필요). 우리 키는 서버 STT가 `PERMISSION_DENIED`라서 서버 합성도 막힐 수 있어 온디바이스 모드를 쓴다.
+- `EventListener`: `onReady()`, `onStart()`, `onUpdatedRms(rms)`, `onDone()`(정상 종료), `onStop()`(중지), `onError(ErrorType)`. 여러 조각을 한 발화로 읽으려면 앞 조각을 `isFinal = false`로 보낸다.
+- `ErrorType`은 STT와 같은 12종이다(AUDIO_ERROR, INVALID_REQUEST_ERROR, MIC_ERROR, NETWORK_ERROR, NOT_SUPPORTED_API, ON_DEVICE_ENGINE_ERROR, PERMISSION_DENIED, SERVER_INTERNAL_ERROR, TIMEOUT, UNAUTHENTICATED, UNAVAILABLE_LANGUAGE, UNKNOWN).
+- 에뮬레이터 확인(2026-11-13): 온디바이스 모드에서 `initialize` → `setLocale ko_KR` → `speak`가 화자 `seoyoon`으로 합성해 약 5초 뒤 `onDone`이 왔고 `release`까지 정상이다. 실제 소리는 확인하지 못했다.
+- 문서에 없는 것: 오디오 출력 위치(`setAudioZoneId`, `setAudioAttributes`)와 화자(`setSpeakerType`)의 값. 기본값을 쓴다.
 
 ## Vehicle
 
@@ -78,8 +95,10 @@
 - 에뮬레이터 연락처(2026-11-11 확인): 에뮬레이터는 AAOS 멀티 유저이고 연락처 프로바이더(`ContactsProvider2`)는 현재 유저(User 10)에만 설치돼 있다. `adb shell`은 기본이 User 0이라 `content`, `pm grant`에 `--user 10`을 붙여야 한다 (`adb shell am get-current-user`로 확인). 더미 연락처는 `content insert --user 10 --uri content://com.android.contacts/raw_contacts`와 `.../data`로 넣는다. 블루투스 연락처(2026-11-11 확인): 휴대폰 AVD(`Pixel_10_Pro`)를 차량 에뮬레이터 옆에 띄우면 에뮬레이터 `netsim` 가상 블루투스로 서로 검색·페어링된다(차량 설정 → 블루투스 → 기기 추가, 휴대폰에서 "연락처와 통화 기록 접근도 허용"을 켜고 Pair). 연결되면 차량의 `PbapClientService`가 휴대폰 연락처를 받아 표준 `ContactsContract` DB에 `account_type=com.android.bluetooth.pbapsink`로 넣고, Picko의 이름 조회가 그 연락처를 찾는다. 번호 표기는 바뀔 수 있다(`010-7777-8888` → `010-777-78888`). 실제 휴대폰과 실차에서의 동작은 확인하지 못했다.
 - 에뮬레이터 실제 음성 호출 성공(2026-11-11): 앱 설치 후 재부팅하고 `adb shell cmd voiceinteraction show`로 "엄마 강남역에서 픽업해줘"라고 말하자 STT가 인식하고 Gleo가 `com.offcourse.picko.REQUEST_PICKUP`(`passenger=엄마`, `place=강남역`)을 골라 `sendActionCall`로 `MainActivity`를 실행했고 앱이 `ACTION_PARAM`을 받았다(logcat 태그 `[GAA]`, `ami-sdk`, `AppActionExecution`). 위 "에뮬레이터 상태" 항목의 음성 호출 실패 기록은 이 환경에서는 더 이상 재현되지 않는다. 앱이 콜백(`APP_ACTION_RESPONSE`)을 보내지 않을 때의 Gleo 동작은 로그에서 확인하지 못했다.
 - 앱 콜백 타임아웃 실측(2026-11-11): 앱이 `APP_ACTION_RESPONSE`를 보내지 않으면 Gleo는 `sendActionCall` 후 **20초**를 기다리고(문서의 "7초"와 다르다) 서버에 `actionCallback=timeout` 이벤트를 보낸다. 서버는 "앱에서 처리가 조금 늦어지고 있어요. 잠시 기다려도 실행이 안 되면 화면에서 직접 진행해 주세요." (`gleo_app_action_timeout`)를 말한다. 앱이 호출을 정상 수신해도 콜백이 없으면 나온다. Gleo는 재호출하지 않는다. 공식 문서(`action_callback`, 라디오 앱 사례)에는 JSON 형식만 있고 브로드캐스트 action과 extra 키 이름은 없다. Gleo 앱(`ai.umos.ambientai`)에서 확인한 것: action `ai.pleos.playground.intent.action.APP_ACTION_RESPONSE`는 manifest가 아니라 코드에서 동적으로 등록된 수신기가 받고(`processReceiver(): APP_ACTION_RESPONSE`), `adb shell am broadcast --user 10`으로 보내면 수신된다. 앱에서 `Context.sendBroadcast(Intent(<위 action>).putExtra("packageName", <앱 패키지>).putExtra("response", <JSON 문자열>))`로 보내면 일반 앱도 수신된다(2026-11-11 실제 음성 호출로 확인). `response`는 `{"functionName","status","message","mode"}` JSON이고, 이렇게 보내면 20초 타임아웃 문구가 나오지 않는다. 영어 `message`("Found the contact for 엄마.")를 Gleo가 한국어로 바꿔 말한다("엄마 연락처로 강남역 픽업을 요청할게요."). `status=asking`이면 Gleo가 되묻는 문장을 말하고("아빠라는 이름의 연락처가 2개 있어요. 어떤 아빠로 서울역 픽업을 요청할까요?") 곧바로 `ListeningPassive`로 돌아간다. 사용자 답변이 앱으로 다시 오는 경로는 확인하지 못했다 (미검증).
+- 문자 전송 검증(2026-11-12, 에뮬레이터 Connect v2.1.0 + 휴대폰 AVD `Pixel_10_Pro`): 블루투스로 페어링하면 차량의 `MapClientService`가 `MceStateMachine state=Connected`가 된다(휴대폰의 "Text Messages" 토글 필요). Pleos Connect SDK 문서 색인에는 문자·전화·연락처 SDK가 없다. 차량의 시스템 메시지 앱 `ai.umos.callandmessage`(`/system_ext/app`)의 `SendMessageOverlayActivity`가 `ACTION_SENDTO`(`smsto:<번호>`)를 받아 오버레이를 띄우지만, 번호만 URI에서 읽고(`getSchemeSpecificPart`) `sms_body`·`EXTRA_TEXT` 처리는 dex 문자열에서 찾지 못했다(디컴파일은 아님). 본문은 음성 받아쓰기(`Recording...`)로만 채워지므로 **URL 같은 정해진 본문을 보낼 수 없다**. 앱이 직접 `BluetoothMapClient.sendMessage`를 부르는 방법은 `BLUETOOTH_PRIVILEGED`(`protectionLevel: signature|privileged`)가 필요해 일반 앱은 받을 수 없다고 판단했다(권한 정의로 판단했고 검증 앱으로 호출해 보지는 않았다). 카카오톡은 블루투스 MAP 경로가 없다. 에뮬레이터 휴대폰에는 통신망이 없어 실제 번호로 가는 문자는 확인하지 못했고, 실제 Pleos 기기와 실제 휴대폰에서의 동작은 확인하지 못했다.
 - 콘솔 업로드 절차는 문서에서 확인하지 못했다. 문서는 "개발 진행에 따라 계속 개선된다"고 밝힌다.
 
 ## 알려진 공백
 
-- TextToSpeech, SpeechToText, NaviHelper, Vehicle의 Gradle 좌표와 상세 API 시그니처는 아직 읽지 않았다. 사용하기 전에 원문을 확인한다.
+- NaviHelper, Vehicle의 Gradle 좌표와 상세 API 시그니처는 아직 읽지 않았다. 사용하기 전에 원문을 확인한다.
+- 앱이 Gleo의 듣기를 직접 시작하는 방법(2026-11-13 확인): 공식 문서(`app-capability`, `core-concepts`, `examples`, SDK 목록)에 없다. 기기에서 `ACTION_ASSIST`는 Gleo `MainActivity`를 열어 `startAmbientAiService()`만 하고 0.3초 뒤 종료하며 듣지 않았다. 음성 세션 시작(`AiAssistantService`)은 `BIND_VOICE_INTERACTION`이고 Gleo 전용 권한(`APP_ACTION`, `SIRI_VOICE_ASSIST`, `STOP_TTS`)은 모두 `signature` 등급이다. 그래서 Gleo는 사용자가 호출어나 PTT로 부를 때만 듣고, 앱이 직접 듣게 하려면 SpeechToText SDK를 쓴다. Gleo 경로(`REQUEST_PICKUP` 수신)는 그대로 둔다.

@@ -66,8 +66,8 @@ val ButtonPrimaryLightGradient = cssLinearGradient(
 
 | 컴포넌트 | 위치 | 용도 |
 | --- | --- | --- |
-| `PickoScreenFrame` | `component/layout/` | 그라데이션 배경, 로고 머리글, 구분선을 두고 내용을 가운데에 맞추는 화면 틀. `showHeader = false`면 머리글을 숨긴다 |
-| `PickoMicBadge` | `component/indicator/` | 음성을 기다리는 원형 마이크 표시 |
+| `PickoScreenFrame` | `component/layout/` | 그라데이션 배경, 로고 머리글, 구분선을 두고 내용을 가운데에 맞추는 화면 틀. `showHeader = false`면 머리글을 숨긴다. `decoration`은 내용 뒤, `overlay`는 내용 위에 창 전체를 덮는 자리다 |
+| `PickoMicBadge` | `component/indicator/` | 음성을 기다리는 원형 마이크 표시. 바깥 halo(Aurora Halo)가 돈다. `onDim = true`면 dim 위용으로 원이 투명하고 마이크가 흰색이다 |
 | `PickoSuccessEmblem` | `component/indicator/` | 완료를 알리는 원형 체크 표시 |
 
 ## 그림자

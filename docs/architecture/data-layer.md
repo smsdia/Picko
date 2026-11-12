@@ -26,8 +26,8 @@ com.offcourse.picko
 
 | 규칙 | 내용 |
 | --- | --- |
-| SDK 경계 | **Pleos SDK import는 `data/vehicle`에서만 허용한다.** 다른 패키지는 SDK 타입을 쓰지 않고 Repository 인터페이스로만 접근한다 |
-| 타입 변환 | `data/vehicle`은 SDK 타입을 `domain`/`presentation`에 노출하지 않고 `XxxModel`로 변환해서 넘긴다. DTO 사용 여부는 SDK 추가 후 정한다 |
+| SDK 경계 | **Pleos SDK import는 `data/vehicle`, `data/speech`에서만 허용한다.** 다른 패키지는 SDK 타입을 쓰지 않고 Repository 인터페이스로만 접근한다 |
+| 타입 변환 | `data/vehicle`, `data/speech`는 SDK 타입을 `domain`/`presentation`에 노출하지 않고 `XxxModel`로 변환해서 넘긴다. DTO 사용 여부는 SDK 추가 후 정한다 |
 | 구현체 참조 | `presentation`은 `repositoryimpl`, `datasource`, `dto`를 참조하지 않는다. 인터페이스와 `model`만 쓴다 |
 | `core` | 특정 기능에 의존하지 않는다 |
 
@@ -59,6 +59,7 @@ abstract fun bindVehicleRepository(impl: FakeVehicleRepository): VehicleReposito
 | --- | --- | --- |
 | `contact` | 이름으로 연락처 조회 | 실제 (`ContactRepositoryImpl`) |
 | `gleo` | Gleo 요청 파싱과 콜백 | 실제 (`GleoRepositoryImpl`) |
+| `speech` | 말로 하는 픽업 요청 듣기(STT)와 문장 해석, 안내 문구 읽기(TTS) | 실제 (`SpeechRecognitionRepositoryImpl`, `PleosSpeechSynthesisRepository`). 클라이언트 ID/시크릿이 없으면 STT 엔진만 가짜(`FakeSpeechTextSource`). TTS는 온디바이스라 키가 필요 없다 |
 | `vehicle` | 차량 위치 | 가짜 (`FakeVehicleRepository`). Pleos SDK 구현이 준비되면 교체 |
 | `place` | 장소 검색, 주변 안전 정차 장소 추천 | 가짜 (`FakePlaceRepository`) |
 | `pickuplink` | 위치 공유 링크 전송, 탑승자 위치 대기, 취소 알림 | 가짜 (`FakePickupLinkRepository`) |
