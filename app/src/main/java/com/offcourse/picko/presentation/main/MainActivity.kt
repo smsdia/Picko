@@ -1,15 +1,11 @@
 package com.offcourse.picko.presentation.main
 
-import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.offcourse.picko.core.designsystem.theme.PickoTheme
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
@@ -25,12 +21,6 @@ private const val EXTRA_ACTION_PARAM = "ACTION_PARAM"
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
 
-    private val requestContactPermission = registerForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { isGranted ->
-        if (isGranted) viewModel.onContactPermissionGranted()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -41,16 +31,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val state by viewModel.state.collectAsStateWithLifecycle()
-
             PickoTheme {
-                MainScreen(
-                    state = state,
-                    onMapError = viewModel::onMapError,
-                    onRequestContactPermission = {
-                        requestContactPermission.launch(Manifest.permission.READ_CONTACTS)
-                    },
-                )
+                MainApp()
             }
         }
     }

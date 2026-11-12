@@ -21,7 +21,8 @@ dependencyResolutionManagement {
         mavenCentral()
         maven("https://nexus-playground.pleos.ai/repository/maven-releases/") {
             content {
-                includeGroup("ai.pleos.playground")
+                // SpeechToText 가 ai.pleos.playground.security 를 의존하므로 하위 그룹까지 허용한다.
+                includeGroupByRegex("ai\\.pleos\\.playground(\\..+)?")
             }
         }
         maven("https://devrepo.kakao.com/nexus/repository/kakaomap-releases/") {

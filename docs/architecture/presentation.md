@@ -18,6 +18,28 @@ MVVM의 단일 소스(ViewModel)와 MVI의 단방향 흐름을 합친 방식이�
 | Screen이나 ViewModel이 `NavController`를 앎 | Route가 받은 람다로만 이동 |
 | Route와 Screen이 Flow를 직접 구독 | ViewModel이 `combine` 등으로 하나의 State로 합침 |
 
+## 흐름 범위 ViewModel
+
+여러 화면이 한 흐름의 상태를 공유하면(연락처 확인부터 목적지 안내까지) 화면마다 ViewModel을 두지 않고, **중첩 NavGraph 항목에 묶은 ViewModel 하나**를 쓴다. 싱글톤 Repository에 상태를 두지 않는다.
+
+| 규칙 | 내용 |
+| --- | --- |
+| 범위 | `navigation<XxxFlowDestination>(...)` 그래프 항목. 흐름이 끝나 그래프가 pop되면 ViewModel도 사라지고, 새 흐름은 새 상태로 시작한다 |
+| 얻는 곳 | NavGraph 쪽에서 `hiltViewModel(getBackStackEntry<XxxFlowDestination>())`로 구해 각 Route에 넘긴다. Route 아래로는 `NavController`를 내려보내지 않는다 |
+| 인자 | 그래프 라우트의 인자로 받고 ViewModel에서 `SavedStateHandle.toRoute<XxxFlowDestination>()`로 읽는다 |
+| 이동 | `XxxSideEffect.NavigateTo(step)`으로 보낸다. Route는 화면이 `RESUMED`일 때만 수집해서, 전환 중인 이전 화면이 이벤트를 가로채지 않게 한다 |
+| 새 요청 | 호출하는 쪽이 `popUpTo<XxxFlowDestination> { inclusive = true }`로 이전 흐름을 pop하고 시작한다 |
+| 화면별 파일 | 화면마다 `XxxRoute`(internal)와 `private XxxScreen`을 둔다. ViewModel과 Contract는 흐름 패키지에 하나씩 둔다 |
+
+```kotlin
+@Composable
+private fun NavController.pickupFlowViewModel(entry: NavBackStackEntry): PickupFlowViewModel {
+    val flowEntry = remember(entry) { getBackStackEntry<PickupFlowDestination>() }
+
+    return hiltViewModel(flowEntry)
+}
+```
+
 ## Contract 파일
 
 화면마다 `XxxContract.kt` 하나에 최상위 타입으로 둔다. `object`로 감싸지 않는다. 파일이 길어지면 파일만 나누고 타입 이름은 유지한다.
