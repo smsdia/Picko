@@ -16,7 +16,9 @@ val localProperties = Properties().apply {
     }
 }
 
-fun localProperty(key: String): String = localProperties.getProperty(key).orEmpty()
+// 값을 따옴표로 감싸 적어도 BuildConfig 문자열이 깨지지 않게 벗긴다.
+fun localProperty(key: String): String =
+    localProperties.getProperty(key).orEmpty().trim().removeSurrounding("\"")
 
 android {
     namespace = "com.offcourse.picko"
@@ -36,6 +38,8 @@ android {
 
         buildConfigField("String", "PLEOS_CLIENT_ID", "\"${localProperty("pleos.client.id")}\"")
         buildConfigField("String", "PLEOS_CLIENT_SECRET", "\"${localProperty("pleos.client.secret")}\"")
+        buildConfigField("String", "KAKAO_NATIVE", "\"${localProperty("kakao.native.key")}\"")
+
     }
 
     buildTypes {
@@ -67,6 +71,7 @@ dependencies {
 
     implementation(libs.timber)
     implementation(libs.pleos.fused.location)
+    implementation(libs.kakao.maps)
 
     testImplementation(libs.bundles.unitTest)
     androidTestImplementation(libs.bundles.test)

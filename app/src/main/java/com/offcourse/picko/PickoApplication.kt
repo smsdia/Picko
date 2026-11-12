@@ -1,6 +1,7 @@
 package com.offcourse.picko
 
 import android.app.Application
+import com.kakao.vectormap.KakaoMapSdk
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
@@ -12,5 +13,7 @@ class PickoApplication : Application() {
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
+
+        KakaoMapSdk.init(this, BuildConfig.KAKAO_NATIVE)
     }
 }

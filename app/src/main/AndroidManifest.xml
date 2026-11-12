@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- 카카오 지도 인증과 타일 로드 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 픽업 요청의 탑승자 이름으로 연락처 번호를 찾는다. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
     <application
         android:name=".PickoApplication"
         android:allowBackup="true"
@@ -16,12 +22,20 @@
             android:name=".presentation.main.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.Picko"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Gleo 가 schema.json 의 REQUEST_PICKUP 을 호출할 때 받는다. action 은 패키지명이 붙은 형태로 온다. -->
+            <intent-filter>
+                <action android:name="com.offcourse.picko.REQUEST_PICKUP" />
+
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
     </application>
