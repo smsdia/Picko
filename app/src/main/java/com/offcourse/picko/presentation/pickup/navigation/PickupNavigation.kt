@@ -32,6 +32,8 @@ data class PickupFlowDestination(
     val passenger: String,
     // null 이면 추천을 요청한 것
     val place: String? = null,
+    // Gleo 호출로 시작했으면 true. 앱이 직접 들은 요청이면 false 라서 Gleo 에 콜백을 보내지 않는다.
+    val isGleoRequest: Boolean = true,
 )
 
 // 흐름 안의 단계. 같은 그래프 항목의 ViewModel을 공유한다.
@@ -64,9 +66,13 @@ data object GuideDestination
 
 fun NavController.navigateToPickupFlow(
     request: PickupRequestModel,
+    isGleoRequest: Boolean,
     builder: NavOptionsBuilder.() -> Unit = {},
 ) {
-    navigate(PickupFlowDestination(passenger = request.passenger, place = request.place), builder)
+    navigate(
+        PickupFlowDestination(passenger = request.passenger, place = request.place, isGleoRequest = isGleoRequest),
+        builder,
+    )
 }
 
 /** 연락처 조회 중인 시작 화면은 뒤로 가기로 돌아오지 않게 지운다. */
@@ -97,6 +103,7 @@ private fun NavController.pickupFlowViewModel(entry: NavBackStackEntry): PickupF
 fun NavGraphBuilder.pickupNavGraph(
     navController: NavController,
     onFlowFinished: () -> Unit,
+    onPickupRequested: (PickupRequestModel) -> Unit,
 ) {
     navigation<PickupFlowDestination>(startDestination = ResolveDestination) {
         composable<ResolveDestination> { entry ->
@@ -104,6 +111,7 @@ fun NavGraphBuilder.pickupNavGraph(
                 viewModel = navController.pickupFlowViewModel(entry),
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
+                onPickupRequested = onPickupRequested,
             )
         }
 
@@ -112,6 +120,7 @@ fun NavGraphBuilder.pickupNavGraph(
                 viewModel = navController.pickupFlowViewModel(entry),
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
+                onPickupRequested = onPickupRequested,
             )
         }
 
@@ -120,6 +129,7 @@ fun NavGraphBuilder.pickupNavGraph(
                 viewModel = navController.pickupFlowViewModel(entry),
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
+                onPickupRequested = onPickupRequested,
                 onBack = { navController.popBackStack() },
             )
         }
@@ -129,6 +139,7 @@ fun NavGraphBuilder.pickupNavGraph(
                 viewModel = navController.pickupFlowViewModel(entry),
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
+                onPickupRequested = onPickupRequested,
             )
         }
 
@@ -137,6 +148,7 @@ fun NavGraphBuilder.pickupNavGraph(
                 viewModel = navController.pickupFlowViewModel(entry),
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
+                onPickupRequested = onPickupRequested,
                 onBack = { navController.popBackStack() },
             )
         }
@@ -146,6 +158,7 @@ fun NavGraphBuilder.pickupNavGraph(
                 viewModel = navController.pickupFlowViewModel(entry),
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
+                onPickupRequested = onPickupRequested,
             )
         }
 
@@ -154,6 +167,7 @@ fun NavGraphBuilder.pickupNavGraph(
                 viewModel = navController.pickupFlowViewModel(entry),
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
+                onPickupRequested = onPickupRequested,
             )
         }
 
@@ -162,6 +176,7 @@ fun NavGraphBuilder.pickupNavGraph(
                 viewModel = navController.pickupFlowViewModel(entry),
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
+                onPickupRequested = onPickupRequested,
             )
         }
 
@@ -170,6 +185,7 @@ fun NavGraphBuilder.pickupNavGraph(
                 viewModel = navController.pickupFlowViewModel(entry),
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
+                onPickupRequested = onPickupRequested,
             )
         }
     }

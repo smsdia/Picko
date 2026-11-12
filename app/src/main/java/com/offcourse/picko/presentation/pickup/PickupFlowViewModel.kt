@@ -17,8 +17,11 @@ import com.offcourse.picko.data.pickuplink.repository.PickupLinkRepository
 import com.offcourse.picko.data.place.model.PlaceModel
 import com.offcourse.picko.data.place.repository.PlaceRepository
 import com.offcourse.picko.data.route.repository.RouteRepository
+import com.offcourse.picko.data.speech.repository.SpeechSynthesisRepository
 import com.offcourse.picko.data.vehicle.repository.VehicleRepository
+import com.offcourse.picko.domain.pickup.usecase.ListenForPickupUseCase
 import com.offcourse.picko.presentation.pickup.navigation.PickupFlowDestination
+import com.offcourse.picko.presentation.voice.VoiceListener
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
@@ -52,6 +55,8 @@ class PickupFlowViewModel @Inject constructor(
     private val pickupLinkRepository: PickupLinkRepository,
     private val routeRepository: RouteRepository,
     private val vehicleRepository: VehicleRepository,
+    listenForPickup: ListenForPickupUseCase,
+    speechSynthesis: SpeechSynthesisRepository,
 ) : ViewModel() {
     private val destination = savedStateHandle.toRoute<PickupFlowDestination>()
 
@@ -69,7 +74,19 @@ class PickupFlowViewModel @Inject constructor(
     // Gleo 는 호출당 콜백 하나만 기다린다. 권한을 허용해 다시 조회해도 두 번 보내지 않는다.
     private var hasRespondedToGleo = false
 
+    // 재요청 오버레이에서 마이크를 눌러 새 요청을 듣는다. 읽으면 지금 흐름을 버리고 새 흐름을 시작한다.
+    private val voiceListener = VoiceListener(
+        scope = viewModelScope,
+        listenForPickup = listenForPickup,
+        speechSynthesis = speechSynthesis,
+        onRequested = { request -> _sideEffect.send(PickupFlowSideEffect.StartPickup(request)) },
+    )
+
     init {
+        viewModelScope.launch {
+            voiceListener.state.collect { voice -> _state.update { it.copy(voice = voice) } }
+        }
+
         lookupContact()
     }
 
@@ -182,7 +199,18 @@ class PickupFlowViewModel @Inject constructor(
     }
 
     fun onVoiceRetryDismissed() {
+        voiceListener.stop()
         _state.update { it.copy(isVoiceRetryVisible = false) }
+    }
+
+    /** 재요청 오버레이의 마이크를 눌렀다. 다시 듣는다. */
+    fun onVoiceRetryMicClicked() {
+        voiceListener.start()
+    }
+
+    /** 오버레이에서 다시 말해야 하는 상태가 됐다. 안내를 소리로 읽고 다시 듣는다. */
+    fun onVoiceAnnounce(text: String) {
+        voiceListener.announceAndRetry(text)
     }
 
     // TODO: 네트워크 호출(장소 검색)을 붙일 때 withTimeout(15초 상한)을 걸고, 초과나 취소에서도 fail 콜백이 한 번은 나가게 한다.
@@ -214,10 +242,8 @@ class PickupFlowViewModel @Inject constructor(
 
                     is ContactLookupResult.Multiple -> navigateTo(PickupStep.Contact)
 
-                    ContactLookupResult.NotFound -> {
-                        _state.update { it.copy(isVoiceRetryVisible = true) }
-                        navigateTo(PickupStep.Contact)
-                    }
+                    // 못 찾은 이름으로는 이어 갈 화면이 없다. 처음 화면으로 돌아가고, 안내는 Gleo 콜백(FAIL)이 맡는다.
+                    ContactLookupResult.NotFound -> finishFlow()
                 }
             }
         }
@@ -310,7 +336,8 @@ class PickupFlowViewModel @Inject constructor(
         status: GleoActionStatus,
         message: String,
     ) {
-        if (hasRespondedToGleo) return
+        // 앱이 직접 들은 요청에는 기다리는 Gleo 호출이 없다.
+        if (!destination.isGleoRequest || hasRespondedToGleo) return
 
         hasRespondedToGleo = true
         gleoRepository.sendPickupResponse(GleoActionResponseModel(status = status, message = message))

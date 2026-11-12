@@ -39,6 +39,7 @@ internal fun ResolveRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
+    onPickupRequested: (PickupRequestModel) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val requestContactPermission = rememberLauncherForActivityResult(
@@ -51,6 +52,7 @@ internal fun ResolveRoute(
         viewModel = viewModel,
         onNavigate = onNavigate,
         onFlowFinished = onFlowFinished,
+        onPickupRequested = onPickupRequested,
     )
 
     ResolveScreen(

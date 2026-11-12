@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.offcourse.picko.R
 import com.offcourse.picko.core.designsystem.component.PickoCarPreview
@@ -37,6 +38,7 @@ internal fun LinkRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
+    onPickupRequested: (PickupRequestModel) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -44,6 +46,7 @@ internal fun LinkRoute(
         viewModel = viewModel,
         onNavigate = onNavigate,
         onFlowFinished = onFlowFinished,
+        onPickupRequested = onPickupRequested,
     )
 
     // 기다리는 중에 뒤로 가면 기다림을 멈추고 확인 화면으로 돌아간다.
@@ -85,24 +88,30 @@ private fun LinkScreen(
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(24.dp),
+                verticalArrangement = Arrangement.spacedBy(48.dp),
             ) {
-                Text(
-                    text = highlightedText(
-                        template = stringResource(R.string.link_title, name),
-                        highlight = name,
-                        color = colors.accentText,
-                    ),
-                    style = PickoTheme.typography.headline.headlineLarge,
-                    color = colors.textPrimary,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    text = stringResource(R.string.link_description),
-                    style = PickoTheme.typography.label.labelLarge,
-                    color = colors.textSecondary,
-                    textAlign = TextAlign.Center,
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    Text(
+                        text = highlightedText(
+                            template = stringResource(R.string.link_title, name),
+                            highlight = name,
+                            color = colors.accentText,
+                        ),
+                        style = PickoTheme.typography.headline.headlineLarge,
+                        color = colors.textPrimary,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = stringResource(R.string.link_description),
+                        // labelLarge의 줄 높이(24sp)는 글자(32)보다 작아 두 줄이 겹치므로 늘려 쓴다.
+                        style = PickoTheme.typography.label.labelLarge.copy(lineHeight = 44.sp),
+                        color = colors.textSecondary,
+                        textAlign = TextAlign.Center,
+                    )
+                }
 
                 if (contact != null) {
                     PickoContactActionCard(

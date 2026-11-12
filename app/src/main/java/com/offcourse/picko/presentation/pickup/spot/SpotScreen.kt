@@ -38,6 +38,7 @@ internal fun SpotRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
+    onPickupRequested: (PickupRequestModel) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -45,6 +46,7 @@ internal fun SpotRoute(
         viewModel = viewModel,
         onNavigate = onNavigate,
         onFlowFinished = onFlowFinished,
+        onPickupRequested = onPickupRequested,
     )
 
     SpotScreen(

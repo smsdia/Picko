@@ -46,6 +46,7 @@ internal fun GuideRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
+    onPickupRequested: (PickupRequestModel) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -53,6 +54,7 @@ internal fun GuideRoute(
         viewModel = viewModel,
         onNavigate = onNavigate,
         onFlowFinished = onFlowFinished,
+        onPickupRequested = onPickupRequested,
     )
 
     GuideScreen(

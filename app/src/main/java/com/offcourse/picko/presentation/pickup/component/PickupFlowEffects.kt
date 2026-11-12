@@ -6,6 +6,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.offcourse.picko.data.gleo.model.PickupRequestModel
 import com.offcourse.picko.presentation.pickup.PickupFlowSideEffect
 import com.offcourse.picko.presentation.pickup.PickupFlowViewModel
 import com.offcourse.picko.presentation.pickup.PickupStep
@@ -20,10 +21,12 @@ internal fun PickupFlowEffects(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
+    onPickupRequested: (PickupRequestModel) -> Unit,
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnNavigate = rememberUpdatedState(onNavigate)
     val currentOnFlowFinished = rememberUpdatedState(onFlowFinished)
+    val currentOnPickupRequested = rememberUpdatedState(onPickupRequested)
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -31,6 +34,7 @@ internal fun PickupFlowEffects(
                 when (effect) {
                     is PickupFlowSideEffect.NavigateTo -> currentOnNavigate.value(effect.step)
                     PickupFlowSideEffect.FinishFlow -> currentOnFlowFinished.value()
+                    is PickupFlowSideEffect.StartPickup -> currentOnPickupRequested.value(effect.request)
                 }
             }
         }

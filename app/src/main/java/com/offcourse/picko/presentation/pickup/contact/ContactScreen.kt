@@ -1,7 +1,6 @@
 package com.offcourse.picko.presentation.pickup.contact
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,12 +31,13 @@ import com.offcourse.picko.presentation.pickup.component.PickupHeading
 import com.offcourse.picko.presentation.pickup.component.VoiceRetryOverlay
 import kotlinx.collections.immutable.persistentListOf
 
-/** 같은 이름의 연락처가 여럿이거나 못 찾았을 때 보이는 화면 */
+/** 같은 이름의 연락처가 여럿일 때 보이는 화면 */
 @Composable
 internal fun ContactRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
+    onPickupRequested: (PickupRequestModel) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -45,12 +45,15 @@ internal fun ContactRoute(
         viewModel = viewModel,
         onNavigate = onNavigate,
         onFlowFinished = onFlowFinished,
+        onPickupRequested = onPickupRequested,
     )
 
     ContactScreen(
         state = state,
         onContactClick = viewModel::onContactSelected,
         onVoiceRetryClick = viewModel::onVoiceRetryRequested,
+        onVoiceRetryMicClick = viewModel::onVoiceRetryMicClicked,
+        onVoiceAnnounce = viewModel::onVoiceAnnounce,
         onVoiceRetryDismiss = viewModel::onVoiceRetryDismissed,
     )
 }
@@ -60,47 +63,53 @@ private fun ContactScreen(
     state: PickupFlowState,
     onContactClick: (ContactModel) -> Unit,
     onVoiceRetryClick: () -> Unit,
+    onVoiceRetryMicClick: () -> Unit,
+    onVoiceAnnounce: (String) -> Unit,
     onVoiceRetryDismiss: () -> Unit,
 ) {
-    PickoScreenFrame {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 29.dp, bottom = 48.dp),
-                verticalArrangement = Arrangement.spacedBy(32.dp),
-            ) {
-                PickupHeading(
-                    title = stringResource(R.string.contact_result_title),
-                    subtitle = stringResource(R.string.contact_result_subtitle),
-                )
-
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    // 첫 후보가 가장 가까운 일치라서 선택된 모양으로 먼저 보여 준다.
-                    itemsIndexed(state.contactCandidates, key = { _, contact -> contact.phoneNumber }) { index, contact ->
-                        PickoContactResultCard(
-                            order = index + 1,
-                            name = contact.name,
-                            phone = contact.phoneNumber,
-                            isSelected = index == 0,
-                            onClick = { onContactClick(contact) },
-                        )
-                    }
-                }
-
-                PickoButton(
-                    text = stringResource(R.string.pickup_voice_retry),
-                    onClick = onVoiceRetryClick,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
+    PickoScreenFrame(
+        overlay = {
             if (state.isVoiceRetryVisible) {
-                VoiceRetryOverlay(onDismiss = onVoiceRetryDismiss)
+                VoiceRetryOverlay(
+                    voice = state.voice,
+                    onMicClick = onVoiceRetryMicClick,
+                    onAnnounce = onVoiceAnnounce,
+                    onDismiss = onVoiceRetryDismiss,
+                )
             }
+        },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 29.dp, bottom = 48.dp),
+            verticalArrangement = Arrangement.spacedBy(32.dp),
+        ) {
+            PickupHeading(
+                title = stringResource(R.string.contact_result_title),
+                subtitle = stringResource(R.string.contact_result_subtitle),
+            )
+
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                itemsIndexed(state.contactCandidates, key = { _, contact -> contact.phoneNumber }) { index, contact ->
+                    PickoContactResultCard(
+                        order = index + 1,
+                        name = contact.name,
+                        phone = contact.phoneNumber,
+                        isSelected = false,
+                        onClick = { onContactClick(contact) },
+                    )
+                }
+            }
+
+            PickoButton(
+                text = stringResource(R.string.pickup_voice_retry),
+                onClick = onVoiceRetryClick,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -124,6 +133,8 @@ private fun ContactScreenPreview() {
             ),
             onContactClick = {},
             onVoiceRetryClick = {},
+            onVoiceRetryMicClick = {},
+            onVoiceAnnounce = {},
             onVoiceRetryDismiss = {},
         )
     }

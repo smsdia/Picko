@@ -1,7 +1,6 @@
 package com.offcourse.picko.presentation.pickup.nearby
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,6 +38,7 @@ internal fun NearbyRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
+    onPickupRequested: (PickupRequestModel) -> Unit,
     onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -47,6 +47,7 @@ internal fun NearbyRoute(
         viewModel = viewModel,
         onNavigate = onNavigate,
         onFlowFinished = onFlowFinished,
+        onPickupRequested = onPickupRequested,
     )
 
     NearbyScreen(
@@ -54,6 +55,8 @@ internal fun NearbyRoute(
         onPlaceClick = viewModel::onNearbySelected,
         onBackClick = onBack,
         onSpeakAgainClick = viewModel::onVoiceRetryRequested,
+        onVoiceRetryMicClick = viewModel::onVoiceRetryMicClicked,
+        onVoiceAnnounce = viewModel::onVoiceAnnounce,
         onVoiceRetryDismiss = viewModel::onVoiceRetryDismissed,
     )
 }
@@ -64,56 +67,62 @@ private fun NearbyScreen(
     onPlaceClick: (PlaceModel) -> Unit,
     onBackClick: () -> Unit,
     onSpeakAgainClick: () -> Unit,
+    onVoiceRetryMicClick: () -> Unit,
+    onVoiceAnnounce: (String) -> Unit,
     onVoiceRetryDismiss: () -> Unit,
 ) {
-    PickoScreenFrame {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 29.dp, bottom = 48.dp),
-                verticalArrangement = Arrangement.spacedBy(32.dp),
-            ) {
-                PickupHeading(
-                    title = stringResource(R.string.nearby_title),
-                    subtitle = stringResource(R.string.nearby_subtitle),
+    PickoScreenFrame(
+        overlay = {
+            if (state.isVoiceRetryVisible) {
+                VoiceRetryOverlay(
+                    voice = state.voice,
+                    onMicClick = onVoiceRetryMicClick,
+                    onAnnounce = onVoiceAnnounce,
+                    onDismiss = onVoiceRetryDismiss,
                 )
+            }
+        },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 29.dp, bottom = 48.dp),
+            verticalArrangement = Arrangement.spacedBy(32.dp),
+        ) {
+            PickupHeading(
+                title = stringResource(R.string.nearby_title),
+                subtitle = stringResource(R.string.nearby_subtitle),
+            )
 
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    // 첫 후보가 가장 가까운 추천이라서 선택된 모양으로 먼저 보여 준다.
-                    itemsIndexed(state.nearbyCandidates, key = { _, place -> place.id }) { index, place ->
-                        PickoNearbyPlaceResultCard(
-                            order = index + 1,
-                            name = place.name,
-                            distanceText = stringResource(R.string.pickup_meta_distance, place.distanceKm),
-                            durationText = stringResource(R.string.pickup_meta_duration, place.durationMinutes),
-                            recommendation = reasonText(place.reason),
-                            isSelected = index == 0,
-                            onClick = { onPlaceClick(place) },
-                        )
-                    }
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    PickoButton(
-                        text = stringResource(R.string.pickup_back),
-                        onClick = onBackClick,
-                        modifier = Modifier.weight(1f),
-                    )
-                    PickoButton(
-                        text = stringResource(R.string.pickup_speak_again),
-                        onClick = onSpeakAgainClick,
-                        modifier = Modifier.weight(1f),
-                        type = PickoButtonType.Secondary,
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                itemsIndexed(state.nearbyCandidates, key = { _, place -> place.id }) { index, place ->
+                    PickoNearbyPlaceResultCard(
+                        order = index + 1,
+                        name = place.name,
+                        distanceText = stringResource(R.string.pickup_meta_distance, place.distanceKm),
+                        durationText = stringResource(R.string.pickup_meta_duration, place.durationMinutes),
+                        recommendation = reasonText(place.reason),
+                        isSelected = false,
+                        onClick = { onPlaceClick(place) },
                     )
                 }
             }
 
-            if (state.isVoiceRetryVisible) {
-                VoiceRetryOverlay(onDismiss = onVoiceRetryDismiss)
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                PickoButton(
+                    text = stringResource(R.string.pickup_back),
+                    onClick = onBackClick,
+                    modifier = Modifier.weight(1f),
+                )
+                PickoButton(
+                    text = stringResource(R.string.pickup_speak_again),
+                    onClick = onSpeakAgainClick,
+                    modifier = Modifier.weight(1f),
+                    type = PickoButtonType.Secondary,
+                )
             }
         }
     }
@@ -156,6 +165,8 @@ private fun NearbyScreenPreview() {
             onPlaceClick = {},
             onBackClick = {},
             onSpeakAgainClick = {},
+            onVoiceRetryMicClick = {},
+            onVoiceAnnounce = {},
             onVoiceRetryDismiss = {},
         )
     }

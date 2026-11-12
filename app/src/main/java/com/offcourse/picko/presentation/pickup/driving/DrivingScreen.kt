@@ -42,6 +42,7 @@ internal fun DrivingRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
+    onPickupRequested: (PickupRequestModel) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -49,6 +50,7 @@ internal fun DrivingRoute(
         viewModel = viewModel,
         onNavigate = onNavigate,
         onFlowFinished = onFlowFinished,
+        onPickupRequested = onPickupRequested,
     )
 
     // 실수로 흐름을 벗어나지 않도록 뒤로 가면 취소 여부를 먼저 묻는다.

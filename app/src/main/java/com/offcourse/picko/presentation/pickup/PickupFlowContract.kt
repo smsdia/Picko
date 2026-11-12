@@ -9,6 +9,7 @@ import com.offcourse.picko.data.gleo.model.PickupRequestModel
 import com.offcourse.picko.data.place.model.PlaceModel
 import com.offcourse.picko.data.route.model.DestinationRoute
 import com.offcourse.picko.data.route.model.PickupRoutes
+import com.offcourse.picko.presentation.voice.VoiceListenState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -34,6 +35,8 @@ data class PickupFlowState(
     val routes: PickupRoutes? = null,
     val destinationRoute: DestinationRoute? = null,
     val isVoiceRetryVisible: Boolean = false,
+    // 재요청 오버레이에서 마이크를 눌러 다시 듣는 상태
+    val voice: VoiceListenState = VoiceListenState(),
     val isCancelDialogVisible: Boolean = false,
 ) {
     /** 연락처 후보가 여럿일 때 고를 목록 */
@@ -48,4 +51,7 @@ sealed interface PickupFlowSideEffect {
 
     /** 흐름이 끝났다(취소 또는 안내 종료). 처음 화면으로 돌아간다. */
     data object FinishFlow : PickupFlowSideEffect
+
+    /** 재요청 오버레이에서 새 픽업 요청을 읽었다. 지금 흐름을 버리고 새 흐름을 시작한다. */
+    data class StartPickup(val request: PickupRequestModel) : PickupFlowSideEffect
 }
