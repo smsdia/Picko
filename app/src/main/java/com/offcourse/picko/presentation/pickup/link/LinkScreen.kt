@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -48,6 +49,11 @@ internal fun LinkRoute(
         onFlowFinished = onFlowFinished,
         onPickupRequested = onPickupRequested,
     )
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.onLinkScreenResumed()
+        onPauseOrDispose { }
+    }
 
     // 기다리는 중에 뒤로 가면 기다림을 멈추고 확인 화면으로 돌아간다.
     BackHandler(enabled = state.linkStatus != LinkStatus.Idle, onBack = viewModel::onLinkWaitCancelled)

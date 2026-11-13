@@ -96,6 +96,7 @@ private fun DrivingScreen(
                     PickupMap(
                         spot = spot,
                         routes = routes,
+                        vehicle = state.vehicle,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()

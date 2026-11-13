@@ -14,11 +14,15 @@ import com.offcourse.picko.data.gleo.model.GleoActionStatus
 import com.offcourse.picko.data.gleo.model.PickupRequestModel
 import com.offcourse.picko.data.gleo.repository.GleoRepository
 import com.offcourse.picko.data.pickuplink.repository.PickupLinkRepository
+import com.offcourse.picko.data.navi.model.NaviDestinationModel
+import com.offcourse.picko.data.navi.repository.NaviRepository
 import com.offcourse.picko.data.place.model.PlaceModel
 import com.offcourse.picko.data.place.repository.PlaceRepository
+import com.offcourse.picko.core.common.model.distanceMetersTo
 import com.offcourse.picko.data.route.repository.RouteRepository
 import com.offcourse.picko.data.speech.repository.SpeechSynthesisRepository
 import com.offcourse.picko.data.vehicle.repository.VehicleRepository
+import com.offcourse.picko.domain.pickup.usecase.FindPickupRoutesUseCase
 import com.offcourse.picko.domain.pickup.usecase.ListenForPickupUseCase
 import com.offcourse.picko.presentation.pickup.navigation.PickupFlowDestination
 import com.offcourse.picko.presentation.voice.VoiceListener
@@ -28,14 +32,16 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
 /**
@@ -54,7 +60,9 @@ class PickupFlowViewModel @Inject constructor(
     private val placeRepository: PlaceRepository,
     private val pickupLinkRepository: PickupLinkRepository,
     private val routeRepository: RouteRepository,
+    private val naviRepository: NaviRepository,
     private val vehicleRepository: VehicleRepository,
+    private val findPickupRoutes: FindPickupRoutesUseCase,
     listenForPickup: ListenForPickupUseCase,
     speechSynthesis: SpeechSynthesisRepository,
 ) : ViewModel() {
@@ -70,6 +78,8 @@ class PickupFlowViewModel @Inject constructor(
 
     private var lookupJob: Job? = null
     private var linkJob: Job? = null
+    private var etaJob: Job? = null
+    private var locationJob: Job? = null
 
     // Gleo 는 호출당 콜백 하나만 기다린다. 권한을 허용해 다시 조회해도 두 번 보내지 않는다.
     private var hasRespondedToGleo = false
@@ -117,8 +127,11 @@ class PickupFlowViewModel @Inject constructor(
                 _state.update { it.copy(linkStatus = LinkStatus.WaitingLocation) }
                 val passenger = pickupLinkRepository.awaitPassengerLocation()
 
-                _state.update { it.copy(passenger = passenger, linkStatus = LinkStatus.Idle) }
-                proceedAfterPassengerLocation(passenger)
+                // 다음 화면으로 넘어갈 때까지 로딩을 유지한다. 여기서 Idle 로 돌리면 확인 화면이 잠깐 다시 보인다.
+                _state.update { it.copy(passenger = passenger, linkStatus = LinkStatus.Completed) }
+                if (!proceedAfterPassengerLocation(passenger)) {
+                    _state.update { it.copy(linkStatus = LinkStatus.Idle) }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -135,6 +148,13 @@ class PickupFlowViewModel @Inject constructor(
         _state.update { it.copy(linkStatus = LinkStatus.Idle) }
     }
 
+    /** 다음 화면에서 뒤로 돌아와 링크 화면이 다시 보일 때, 끝난 로딩 상태를 확인 화면으로 되돌린다. */
+    fun onLinkScreenResumed() {
+        _state.update { state ->
+            if (state.linkStatus == LinkStatus.Completed) state.copy(linkStatus = LinkStatus.Idle) else state
+        }
+    }
+
     fun onNearbySelected(place: PlaceModel) {
         _state.update { it.copy(selectedPlace = place) }
 
@@ -142,10 +162,14 @@ class PickupFlowViewModel @Inject constructor(
     }
 
     fun onStartNavigationClicked() {
+        vehicleRepository.onNavigationStarted()
         navigateTo(PickupStep.Driving)
+        trackVehicleEta()
     }
 
     fun onPickupCompleted() {
+        etaJob?.cancel()
+        locationJob?.cancel()
         navigateTo(PickupStep.Complete)
     }
 
@@ -176,23 +200,27 @@ class PickupFlowViewModel @Inject constructor(
         }
     }
 
+    /** 차량 내비에 목적지 안내를 맡기고 흐름을 끝낸다. 픽업을 마치면 이 앱이 할 일은 없다. */
     fun onGuideClicked() {
         val from = _state.value.selectedPlace?.coordinate ?: return
 
         viewModelScope.launch {
             val route = routeRepository.findDestinationRoute(from)
+            val destination = NaviDestinationModel(
+                name = route.destinationName,
+                coordinate = route.route.points.last(),
+            )
 
-            _state.update { it.copy(destinationRoute = route) }
-            navigateTo(PickupStep.Guide)
+            if (!naviRepository.startGuidance(destination)) {
+                Timber.w("차량 내비에 연결하지 못해 안내를 시작하지 못했다")
+            }
+
+            finishFlow()
         }
     }
 
     // TODO: 음악 재생은 Pleos 에서 호출할 방법이 확인되면 구현한다.
     fun onMusicClicked() = Unit
-
-    fun onGuideFinished() {
-        finishFlow()
-    }
 
     fun onVoiceRetryRequested() {
         _state.update { it.copy(isVoiceRetryVisible = true) }
@@ -211,6 +239,33 @@ class PickupFlowViewModel @Inject constructor(
     /** 오버레이에서 다시 말해야 하는 상태가 됐다. 안내를 소리로 읽고 다시 듣는다. */
     fun onVoiceAnnounce(text: String) {
         voiceListener.announceAndRetry(text)
+    }
+
+    /**
+     * 픽업 지점으로 이동하는 동안 차량 내비에 소요 시간을 주기적으로 다시 묻고 안내 화면의 차량 도착 시간을 갱신한다.
+     * 안내를 시작하지 않는 `requestTrip`이라 내비 화면이 올라오지 않는다. 내비가 답하지 못한 주기는 건너뛴다.
+     */
+    private fun trackVehicleEta() {
+        val spot = _state.value.selectedPlace ?: return
+        val destination = NaviDestinationModel(name = spot.name, coordinate = spot.coordinate)
+
+        etaJob?.cancel()
+        etaJob = viewModelScope.launch {
+            while (true) {
+                delay(VEHICLE_ETA_REFRESH_MILLIS)
+
+                val trip = naviRepository.previewTrip(destination) ?: continue
+                Timber.d("차량 도착 시간 갱신: %d분, %dm", trip.durationMinutes, trip.distanceMeters)
+
+                _state.update { state ->
+                    val routes = state.routes ?: return@update state
+
+                    state.copy(
+                        routes = routes.copy(vehicle = routes.vehicle.copy(durationMinutes = trip.durationMinutes)),
+                    )
+                }
+            }
+        }
     }
 
     // TODO: 네트워크 호출(장소 검색)을 붙일 때 withTimeout(15초 상한)을 걸고, 초과나 취소에서도 fail 콜백이 한 번은 나가게 한다.
@@ -269,32 +324,68 @@ class PickupFlowViewModel @Inject constructor(
         navigateTo(PickupStep.Place)
     }
 
-    /** 탑승자의 위치를 받은 뒤: 장소를 이미 골랐으면 추천 지점으로, 아니면 주변 장소를 추천한다. */
-    private suspend fun proceedAfterPassengerLocation(passenger: Coordinate) {
-        if (_state.value.selectedPlace != null) {
-            prepareSpot()
-        } else {
-            val nearby = placeRepository.recommendNearby(passenger)
+    /**
+     * 탑승자의 위치를 받은 뒤: 장소를 이미 골랐으면 추천 지점으로, 아니면 주변 장소를 추천한다.
+     * 다음 화면으로 넘어가지 못했으면 false.
+     */
+    private suspend fun proceedAfterPassengerLocation(passenger: Coordinate): Boolean {
+        if (_state.value.selectedPlace != null) return prepareSpot()
 
-            _state.update { it.copy(nearbyCandidates = nearby.toImmutableList()) }
-            navigateTo(PickupStep.Nearby)
-        }
+        val nearby = placeRepository.recommendNearby(passenger)
+
+        _state.update { it.copy(nearbyCandidates = nearby.toImmutableList()) }
+        navigateTo(PickupStep.Nearby)
+        return true
     }
 
-    private suspend fun prepareSpot() {
+    /** 픽업 경로를 만들고 추천 지점 화면으로 간다. 필요한 값이 없어 가지 못했으면 false. */
+    private suspend fun prepareSpot(): Boolean {
         val state = _state.value
-        val spot = state.selectedPlace ?: return
-        val passenger = state.passenger ?: return
+        val spot = state.selectedPlace ?: return false
+        val passenger = state.passenger ?: return false
         val vehicle = vehicleCoordinate()
-        val routes = routeRepository.findPickupRoutes(vehicle = vehicle, passenger = passenger, pickup = spot.coordinate)
+        if (vehicle == null) {
+            // TODO: 차량 위치를 받지 못했을 때 화면 상태로 알린다. 지금은 현재 화면에 머문다.
+            Timber.w("차량 위치를 받지 못해 픽업 경로를 만들지 못했다")
+            return false
+        }
+        val routes = findPickupRoutes(
+            vehicle = vehicle,
+            passenger = passenger,
+            pickup = spot.coordinate,
+            pickupName = spot.name,
+        )
 
         _state.update { it.copy(vehicle = vehicle, routes = routes) }
         navigateTo(PickupStep.Spot)
+        trackVehicleLocation()
+        return true
     }
 
-    private suspend fun vehicleCoordinate(): Coordinate = vehicleRepository.observeLocation().first().let { location ->
-        Coordinate(latitude = location.latitude, longitude = location.longitude)
+    /**
+     * 차량 위치가 바뀔 때마다 지도의 차량 마커를 옮긴다. 지도는 이 값으로 지나간 경로를 지우고 카메라를 다시 맞춘다.
+     * 몇 미터 안의 흔들림은 건너뛴다.
+     */
+    private fun trackVehicleLocation() {
+        locationJob?.cancel()
+        locationJob = viewModelScope.launch {
+            vehicleRepository.observeLocation().collect { location ->
+                val position = Coordinate(latitude = location.latitude, longitude = location.longitude)
+
+                _state.update { state ->
+                    val last = state.vehicle
+                    if (last != null && last.distanceMetersTo(position) < VEHICLE_MOVE_THRESHOLD_METERS) return@update state
+
+                    state.copy(vehicle = position)
+                }
+            }
+        }
     }
+
+    /** 차량의 현재 위치. 시간 안에 받지 못하면 null. */
+    private suspend fun vehicleCoordinate(): Coordinate? = withTimeoutOrNull(VEHICLE_LOCATION_TIMEOUT_MILLIS) {
+        vehicleRepository.observeLocation().firstOrNull()
+    }?.let { location -> Coordinate(latitude = location.latitude, longitude = location.longitude) }
 
     private fun respondToGleo(
         lookup: UiState<ContactLookupResult>,
@@ -348,6 +439,17 @@ class PickupFlowViewModel @Inject constructor(
     }
 
     private fun finishFlow() {
+        etaJob?.cancel()
+        locationJob?.cancel()
         _sideEffect.trySend(PickupFlowSideEffect.FinishFlow)
     }
 }
+
+// 차량 도착 시간을 내비에 다시 묻는 간격. 호출 하나가 약 0.3초 걸린다. NaviHelper 의 onDrivingInfo 는 약 5분 간격이라 쓰지 않는다.
+private const val VEHICLE_ETA_REFRESH_MILLIS = 10_000L
+
+// 차량 위치를 기다리는 상한. 위치가 1초마다 오므로 이 안에 오지 않으면 받을 수 없는 것으로 본다.
+private const val VEHICLE_LOCATION_TIMEOUT_MILLIS = 5_000L
+
+// 이보다 적게 움직인 위치 갱신은 지도에 반영하지 않는다.
+private const val VEHICLE_MOVE_THRESHOLD_METERS = 10.0

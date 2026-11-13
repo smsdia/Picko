@@ -15,7 +15,6 @@ import com.offcourse.picko.presentation.pickup.PickupStep
 import com.offcourse.picko.presentation.pickup.complete.CompleteRoute
 import com.offcourse.picko.presentation.pickup.contact.ContactRoute
 import com.offcourse.picko.presentation.pickup.driving.DrivingRoute
-import com.offcourse.picko.presentation.pickup.guide.GuideRoute
 import com.offcourse.picko.presentation.pickup.link.LinkRoute
 import com.offcourse.picko.presentation.pickup.nearby.NearbyRoute
 import com.offcourse.picko.presentation.pickup.place.PlaceRoute
@@ -61,9 +60,6 @@ data object DrivingDestination
 @Serializable
 data object CompleteDestination
 
-@Serializable
-data object GuideDestination
-
 fun NavController.navigateToPickupFlow(
     request: PickupRequestModel,
     isGleoRequest: Boolean,
@@ -85,7 +81,6 @@ private fun NavController.navigateToStep(step: PickupStep) {
         PickupStep.Spot -> SpotDestination
         PickupStep.Driving -> DrivingDestination
         PickupStep.Complete -> CompleteDestination
-        PickupStep.Guide -> GuideDestination
     }
 
     navigate(destination) {
@@ -180,13 +175,5 @@ fun NavGraphBuilder.pickupNavGraph(
             )
         }
 
-        composable<GuideDestination> { entry ->
-            GuideRoute(
-                viewModel = navController.pickupFlowViewModel(entry),
-                onNavigate = navController::navigateToStep,
-                onFlowFinished = onFlowFinished,
-                onPickupRequested = onPickupRequested,
-            )
-        }
     }
 }

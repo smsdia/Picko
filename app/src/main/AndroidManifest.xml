@@ -8,11 +8,18 @@
     <!-- 픽업 요청의 탑승자 이름으로 연락처 번호를 찾는다. -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
+    <!-- 차량 위치(FusedLocation SDK)로 픽업 경로의 출발지를 정한다. -->
+    <uses-permission android:name="pleos.car.permission.FUSED_LOCATION" />
+
     <!-- 음성 인식(SpeechToText SDK)으로 픽업 요청을 듣는다. -->
     <uses-permission android:name="pleos.car.permission.STT_SERVICE" />
 
     <!-- 음성 안내(TextToSpeech SDK)로 결과를 소리로 알린다. -->
     <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
+
+    <!-- 차량 내비(NaviHelper)에 소요 시간을 묻고(NAVI_ROUTE) 경로 탐색과 안내를 요청한다(NAVI_ROUTE_SEARCH). -->
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
 
     <application
         android:name=".PickoApplication"
@@ -31,6 +38,11 @@
             android:launchMode="singleTop"
             android:theme="@style/Theme.Picko"
             android:windowSoftInputMode="adjustResize">
+            <!-- 주행 중에도 쓰는 앱이다. 없으면 차량이 주행 상태일 때 "주행 중에는 사용할 수 없습니다."로 막힌다. -->
+            <meta-data
+                android:name="distractionOptimized"
+                android:value="true" />
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.offcourse.picko.core.designsystem.component.PickoCarPreview
@@ -27,6 +26,9 @@ import com.offcourse.picko.core.designsystem.theme.PickoTheme
 import com.offcourse.picko.core.common.extensions.dropShadowLevel1
 
 enum class PickoMapMarkerType { Driver, Pedestrian, Pickup }
+
+/** 배지를 기준으로 라벨이 놓이는 쪽. 가까이 놓인 마커의 라벨이 겹치지 않게 서로 다른 쪽에 둔다. */
+enum class PickoMapMarkerLabelSide { Start, End }
 
 private val BadgeSize = 88.dp
 private val HaloRadius = 120.dp
@@ -42,37 +44,23 @@ fun PickoMapMarker(
     title: String,
     description: String,
     modifier: Modifier = Modifier,
+    labelSide: PickoMapMarkerLabelSide = PickoMapMarkerLabelSide.End,
 ) {
-    val haloColor = PickoTheme.colors.accentCornflower
-
     Row(
-        modifier = modifier
-            .drawBehind {
-                if (type == PickoMapMarkerType.Driver) {
-                    val center = Offset(MarkerHorizontalPadding.toPx() + BadgeSize.toPx() / 2, size.height / 2)
-
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            0f to haloColor.copy(alpha = 0.5f),
-                            0.45f to haloColor.copy(alpha = 0.23f),
-                            1f to haloColor.copy(alpha = 0f),
-                            center = center,
-                            radius = HaloRadius.toPx(),
-                        ),
-                        radius = HaloRadius.toPx(),
-                        center = center,
-                    )
-                }
-            }
-            .padding(horizontal = MarkerHorizontalPadding, vertical = 10.dp),
+        modifier = modifier.padding(horizontal = MarkerHorizontalPadding, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PickoMapMarkerBadge(type = type)
+        if (labelSide == PickoMapMarkerLabelSide.End) {
+            PickoMapMarkerBadge(type = type)
+        }
         PickoMapMarkerLabel(
             title = title,
             description = description,
         )
+        if (labelSide == PickoMapMarkerLabelSide.Start) {
+            PickoMapMarkerBadge(type = type)
+        }
     }
 }
 
@@ -89,9 +77,26 @@ fun PickoMapMarkerBadge(
     }
     // 픽업 아이콘은 배지 크기에 맞춰 그려져 있고, 나머지는 48dp 아이콘이다.
     val iconSize = if (type == PickoMapMarkerType.Pickup) BadgeSize else 48.dp
+    val haloColor = colors.accentCornflower
 
     Box(
         modifier = modifier
+            // 차량 마커는 배지 뒤로 빛이 퍼진다. 배지 밖으로 그려지므로 크기를 정하기 전에 둔다.
+            .drawBehind {
+                if (type == PickoMapMarkerType.Driver) {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            0f to haloColor.copy(alpha = 0.5f),
+                            0.45f to haloColor.copy(alpha = 0.23f),
+                            1f to haloColor.copy(alpha = 0f),
+                            center = center,
+                            radius = HaloRadius.toPx(),
+                        ),
+                        radius = HaloRadius.toPx(),
+                        center = center,
+                    )
+                }
+            }
             .size(BadgeSize)
             .dropShadowLevel1(CircleShape)
             .background(background, CircleShape)
@@ -151,6 +156,7 @@ private fun PickoMapMarkerPreview() {
                 type = PickoMapMarkerType.Pedestrian,
                 title = "탑승자",
                 description = "픽업 지점으로 이동 중",
+                labelSide = PickoMapMarkerLabelSide.Start,
             )
             PickoMapMarker(
                 type = PickoMapMarkerType.Pickup,

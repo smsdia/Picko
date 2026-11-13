@@ -23,10 +23,19 @@
 
 ## NaviHelper
 
-- 진입점 `NaviHelper`. 사용 순서: 생성 → `initialize()` → `addListener()` → 경로·정보 API 호출 → 콜백 처리 → `removeListener()`, `release()`
-- 제공: 목적지 설정·확정·취소, 경로 옵션 변경·재탐색, 경유지 추가·조회·삭제, 경유지 포함 경로 요청, 경로 탐색·주행 상태 이벤트, 안내 정보 조회
-- 이벤트: `NaviHelperEventListener`
-- 상세: `.../NaviHelper/importing-sdk`, `.../entry`, `.../error-handling`, `.../declaring-permissions`
+- 좌표 `ai.pleos.playground:NaviHelper:3.0.5`(AAR의 클래스를 `javap`로 확인한 시그니처. 문서 본문에는 시그니처가 없다). 권한 `pleos.car.permission.NAVI_ROUTE`(경로 정보·요청), `NAVI_ROUTE_SEARCH`(탐색·취소·경유지), `NAVI_CUSTOM_MAP`(내비 화면 요청)
+- 진입점 `ai.pleos.playground.navi.helper.NaviHelper(context)`. 사용 순서: 생성 → `initialize(onConnected, onFailed)` → `onConnected`에서 `addListener(NaviHelperEventListener)` → API 호출 → 결과는 콜백 → `removeListener()`, `release()`
+- 호출: `requestRoute(RouteInfo)`(목적지 설정과 경로 요청을 겸함), `cancelRoute()`, `changeRouteOption(RouteOption)`, `requestReRoute()`, `requestRouteWithWaypoints`, `addWaypoint`, `removeWaypoint`, `requestTrip(TripRequest)`(안내 시작 없이 거리·도착 예정), `requestNavigationScreen(NavigationScreenRequest)`(`Foreground`, `OverviewRoute`, `EditRoute`, `SearchPlace`, `POIDetailPopup` 등), 조회 `getRouteStateInfo`, `getDestinationInfo`, `getTBTInfo`, `getCurrentLocationInfo`
+- 결과는 `NaviHelperEventListener` 콜백이다. `onRouteStarted(RouteStartInfo: duration, distance)`, `onRoutingCompleted`, `onTripInfo(TripInfo: distance, eta)`, `onDestinationInfo`, `onTBTInfo`, `onNavigationStatus`, `onError(NaviErrorCode)`. `requestRoute()`가 성공해도 탐색 완료가 아니다.
+- **경로 좌표(폴리라인)를 돌려주는 API는 없다.** `TripSummary.routePoints`는 출발·경유·도착 지점뿐이다. 그래서 `RouteMap`처럼 앱이 선을 그리려면 다른 경로 소스가 필요하다.
+- 차량 도착 시간 갱신(2026-11-13 에뮬레이터): `onDrivingInfo`는 안내 중에만 오고 약 5분 간격이라 쓰지 않는다. 픽업 이동 중에는 `requestTrip`을 10초 간격으로 다시 불러 갱신한다(호출 하나 약 0.3초, 내비 앱이 실행 중이어야 응답하고 아니면 타임아웃). 위치가 움직일 때 값이 줄어드는지는 에뮬레이터에서 확인하지 못했다.
+- 앱 연동: `data/navi`(`NaviHelperRepository`)가 `requestTrip`(소요 시간 미리 보기)과 `requestRoute`(안내 시작)만 쓴다. 안내를 시작하면 앱은 흐름을 끝내고 안내는 내비가 맡는다. 권한 `NAVI_ROUTE`, `NAVI_ROUTE_SEARCH`는 메인 매니페스트에 있다.
+- 에뮬레이터에서 `requestTrip` 값이 이동에 따라 줄지 않는 이유(2026-11-13): 내비 엔진이 자기 위치를 고정값(경도 127.094681, 위도 37.4127212, 위성 0개, 속도 0)으로 두고 `requestTrip`의 출발지로 쓴다(`navi_engine mapmatching` 로그와 `grpc_caller` 요청의 `origin`). 에뮬레이터가 만드는 NMEA는 체크섬이 틀려 내비 앱의 `GpsLocationSource`가 `Invalid NMEA message`로 거부하고, 체크섬을 맞춘 NMEA를 `adb emu geo nmea`로 1초마다 보내 경고는 없앴지만 내비 위치와 ETA(30분, 12,463m)는 그대로였다. 그래서 GPX 재생이나 `geo fix`로는 내비 값의 감소를 확인할 수 없고 실차에서 봐야 한다.
+- 동작 확인용 디버그 화면: `app/src/debug/.../debug/navi/NaviExperimentActivity`(디버그 빌드의 "Navi 실험" 런처 아이콘). 에뮬레이터(Connect v2.1.0, 2026-11-13) 확인: `requestRoute`와 `requestNavigationScreen(Foreground)`는 내비 앱(`ai.umos.maps.android.navigation.app`)을 **오른쪽 앱 영역에 띄우고 우리 앱을 가린다**(홈 화면 앱이 `hideTask`). 왼쪽 차량 뷰(`ai.umos.drivingview`)는 바뀌지 않고, 앱이 옮길 수 없다(`cmd activity task resize`는 shell 권한이라 일반 앱은 못 쓰고, 해도 화면 위치는 홈 화면 앱이 정한다). 오른쪽 영역 가장자리의 ⋮ 핸들을 사용자가 끌면 홈 화면 앱이 내비와 우리 앱을 좌우로 나눠 둘 다 보이고, 이 상태에서는 우리 앱이 가려지지 않은 채 `requestRoute`, `OverviewRoute`가 동작한다. 분할을 앱이 코드로 켜는 방법은 확인하지 못했다. 공식 문서(앱 구조·화면 모델, 창 정책)에도 앱이 분할을 요청하는 API는 없고 창 배치는 사용자 조작(세 손가락 스와이프, 창 막대)이다. 우리 앱이 단독일 때 `FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_LAUNCH_ADJACENT`로 내비 앱을 시작해 봤으나 무시되고 슬롯이 2:0이 돼 내비가 앱 영역을 점거했다. 사용자가 우리 앱과 전화 앱을 분할해 둔 상태에서 `requestRoute`를 부르면 내비가 **상대 슬롯의 앱(전화)을 가리고 그 자리에 들어가며** 우리 앱은 그대로 보인다(2026-11-13 에뮬레이터).
+- 창 배치(2026-11-13 에뮬레이터, 슬롯 비율은 홈 화면 앱 로그 `updateSlotWeight`): 우리 앱이 단독일 때 내비를 `startActivity`(플래그 없음 또는 `LAUNCH_ADJACENT`)로 띄우면 **2:0**이고 내비가 앱 영역 전체를 차지해 우리 앱이 가려진다. 1:1이 되는 것은 사용자가 먼저 분할해 둔 경우뿐이다. 우리 액티비티에 `screenOrientation="portrait"`를 줘도 반쪽 창이 되지 않고 가로 영역 가운데에 레터박스로 놓이며, 이어서 내비를 띄워도 2:0이다.
+- 안내 중 정보(에뮬레이터 확인): `requestRoute` 뒤 안내가 시작되면 앱이 폴링 없이 `onRouteStarted`, `onNavigationStatus(ROUTE_DRIVE)`, `onTBTInfo`, `onDrivingInfo`(목적지 이름·남은 시간·거리)를 받는다. `getDestinationInfo()`는 `remainDistance`, `remainTime`을, `getCurrentLocationInfo()`는 위도·경도·방향·주소를 준다. 에뮬레이터 차량이 정지 상태라 값이 줄어드는 것과 `onDrivingInfo`의 갱신 주기는 확인하지 못했다(내비 앱 자체 로그에서는 5분 간격으로 보였다).
+- 참고: 안내 취소 뒤 앱 복귀(2026-11-13 에뮬레이터, 앱은 쓰지 않는다): `cancelRoute`를 부르면 내비 앱이 스스로 앞으로 올라와 우리 앱이 백그라운드가 되고, 이후 `ActivityManager.AppTask.moveToFront()`는 `Background activity launch blocked`로 조용히 막힌다. 앱이 `SYSTEM_ALERT_WINDOW`(사용자가 설정에서 허용하는 특수 권한)를 허용받으면 통과해 우리 앱이 앞으로 돌아온다(`adb shell appops set --user 10 <패키지> SYSTEM_ALERT_WINDOW allow`로 확인). 내비 앱은 이 권한으로 우리 앱 위에 올라온다. 권한 없이는 사용자가 GNB의 앱 아이콘으로 돌아와야 한다.
+- 홈 화면 앱(`ai.umos.homescreen`)의 외부 진입점(`dumpsys`로 확인): 동적 브로드캐스트 수신기 `ai.umos.intent.action.ENFORCE_APP_RATIO`(`CONTROL_WINDOW` 필요, signature|privileged라 일반 앱은 못 씀), `ai.umos.intent.action.HIDE_APP`(`MANAGE_TASK`, normal), `ai.umos.homescreen.intent.action.REQUEST_TO_ENFORCE_APP_ORIENTATION`(권한 요구 없음, `handleEnforceAppOrientationRequest`가 호출됨, extra 키는 확인하지 못했다. 문서에 없고 APK를 읽을 수 없다). 내비 앱도 `ENFORCE_APP_ORIENTATION` 권한을 갖는다. 분할을 켜는 인터페이스는 찾지 못했다. `requestRoute`는 경로 선택 화면을 띄우고 몇 초 뒤 안내가 자동 시작된다. `requestTrip`은 화면을 바꾸지 않고 `onTripInfo`(거리 12463m, eta 2399초 형태)만 준다.
 
 ## SpeechToText
 
@@ -59,6 +68,8 @@
 - 20개 이상 도메인(CarInfo, Door, Tire, Window, DrivingMode, Odometer, EvBattery, HVAC, Seat, Brake, Warning, Light, TurnSignal 등). 속도·기어 도메인은 요약에서 확인되지 않았다.
 - 도메인별 권한: `.../Vehicle/vehicle-permission`. 기능 지원 확인: `.../Vehicle/check-capability`
 - 샘플 앱: `/docs/pleos-only/tutorial/vehicle-sdk-sample-app`
+- 주야간·조도(`Vehicle` 2.3.2 AAR를 `javap`로 확인, 2026-11-13): 주야간 신호(`NIGHT_MODE` 등)와 조도(lux) 값은 없다. `Display`는 온도 단위만 다룬다. 외부 조명 켜짐은 `Light`의 `getCurrentLowBeamLightState` 등과 `registerLowBeamLightState(LightStateListener)`(`onLightStateUpdated(LightState)`)로 받고, `LightState`는 `OFF`, `ON`, `DAYTIME_RUNNING`이다. 권한은 읽기 `pleos.car.permission.CAR_LIGHTS`, 쓰기 `CONTROL_CAR_LIGHTS`. `AmbientLight*`는 실내 무드등이라 환경 조도가 아니다. 아직 앱 의존성에 넣지 않았다.
+- 주야간 일반 안드로이드 경로(에뮬레이터 Connect v2.1.0, 2026-11-13): `UiModeManager.currentModeType`이 `CAR`이고, `adb shell cmd uimode night yes`로 바꾸면 `Configuration.uiMode`와 `isSystemInDarkTheme()`이 따라온다. 차량 쪽에서 이 값을 자동으로 바꾸는지(`nightMode=AUTO`일 때의 동작)는 확인하지 못했다. `TYPE_LIGHT` 센서는 있으나 0.0 lux를 1회만 준다. 확인용 디버그 화면: `app/src/debug/.../debug/light/LightExperimentActivity`(런처 아이콘 "조도 실험").
 
 ## Gleo Interface
 
@@ -73,6 +84,7 @@
 - 권한 선언: `<uses-permission android:name="pleos.car.permission.FUSED_LOCATION" />`
 - 공식 샘플: https://github.com/Pleos-Playground/pleos-sample-fusedlocation-app (확인일 2026-11-08). 구조: `FusedLocationClient`(SDK 래퍼) → `MainViewModel` → `MainScreen`. 샘플 빌드 설정은 AGP 8.8.2, Kotlin 2.0.0, compileSdk 35, minSdk 24이며 우리 프로젝트 버전과 다르다. 의존성을 붙일 때 호환을 직접 확인한다.
 - FusedLocation 사용 흐름: `isSupported()` 확인 → 권한 요청 → `initialize()` → `registerFusedLocationCallback(FusedLocationListener)` 또는 `getLastKnownLocation(listener)` → 종료 시 `unregisterFusedLocationCallback`, `release()`
+- 권한 `pleos.car.permission.FUSED_LOCATION`은 `dangerous`라 매니페스트 선언만으로는 `SecurityException: need Permission`이 난다. 런타임 허용이 필요하다(에뮬레이터 `pm grant`로 확인). `LocationData`는 위도, 경도, 고도, 방위(heading), `confidence`(에뮬레이터에서 GPS 정확도 m와 같은 값), 시각이다. 에뮬레이터는 `adb emu geo fix` 좌표를 1초마다 전달한다.
 - 리스너: `FusedLocationListener`(`onChanged(location: LocationData?)`, `onError(exception)`), `ProximityAlertListener`(`onRegistered(alertId)`, `onTransition(event)`, `onError(exception)`). 패키지: `ai.pleos.playground.location.fused.*`
 - 근접 알림: `addProximityAlert(ProximityAlertRequest, listener)`, `removeProximityAlert(alertId)`, 이벤트 `ProximityAlertEvent`(ENTER/EXIT)
 - 에뮬레이터 테스트: 앱 실행 후 `adb emu geo fix <경도> <위도>`(경도가 먼저). 목 위치는 `adb shell appops set --user current <패키지> android:mock_location allow` 후 `LocationManager` 테스트 프로바이더로 주입한다.
@@ -100,5 +112,5 @@
 
 ## 알려진 공백
 
-- NaviHelper, Vehicle의 Gradle 좌표와 상세 API 시그니처는 아직 읽지 않았다. 사용하기 전에 원문을 확인한다.
+- Vehicle의 Gradle 좌표와 상세 API 시그니처는 아직 읽지 않았다. 사용하기 전에 원문을 확인한다.
 - 앱이 Gleo의 듣기를 직접 시작하는 방법(2026-11-13 확인): 공식 문서(`app-capability`, `core-concepts`, `examples`, SDK 목록)에 없다. 기기에서 `ACTION_ASSIST`는 Gleo `MainActivity`를 열어 `startAmbientAiService()`만 하고 0.3초 뒤 종료하며 듣지 않았다. 음성 세션 시작(`AiAssistantService`)은 `BIND_VOICE_INTERACTION`이고 Gleo 전용 권한(`APP_ACTION`, `SIRI_VOICE_ASSIST`, `STOP_TTS`)은 모두 `signature` 등급이다. 그래서 Gleo는 사용자가 호출어나 PTT로 부를 때만 듣고, 앱이 직접 듣게 하려면 SpeechToText SDK를 쓴다. Gleo 경로(`REQUEST_PICKUP` 수신)는 그대로 둔다.

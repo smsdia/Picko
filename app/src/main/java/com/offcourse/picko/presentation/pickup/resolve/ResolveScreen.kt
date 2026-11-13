@@ -1,6 +1,7 @@
 package com.offcourse.picko.presentation.pickup.resolve
 
 import android.Manifest
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -11,9 +12,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -27,6 +30,7 @@ import com.offcourse.picko.core.designsystem.component.layout.PickoScreenFrame
 import com.offcourse.picko.core.designsystem.icon.PickoIcons
 import com.offcourse.picko.core.designsystem.theme.PickoTheme
 import com.offcourse.picko.data.gleo.model.PickupRequestModel
+import com.offcourse.picko.data.vehicle.model.VehiclePermission
 import com.offcourse.picko.presentation.pickup.PickupFlowState
 import com.offcourse.picko.presentation.pickup.PickupFlowViewModel
 import com.offcourse.picko.presentation.pickup.PickupStep
@@ -46,6 +50,19 @@ internal fun ResolveRoute(
         ActivityResultContracts.RequestPermission(),
     ) { isGranted ->
         if (isGranted) viewModel.onContactPermissionGranted()
+    }
+
+    // 픽업 경로의 출발지에 차량 위치가 필요해서, 흐름이 시작될 때 한 번 위치 권한을 요청한다. 거부해도 연락처 확인은 계속된다.
+    val context = LocalContext.current
+    val requestLocationPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {}
+
+    LaunchedEffect(Unit) {
+        val isLocationGranted = context.checkSelfPermission(VehiclePermission.LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+
+        if (!isLocationGranted) requestLocationPermission.launch(VehiclePermission.LOCATION)
     }
 
     PickupFlowEffects(
