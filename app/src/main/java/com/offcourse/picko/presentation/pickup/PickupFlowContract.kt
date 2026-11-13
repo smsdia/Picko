@@ -7,17 +7,19 @@ import com.offcourse.picko.data.contact.model.ContactLookupResult
 import com.offcourse.picko.data.contact.model.ContactModel
 import com.offcourse.picko.data.gleo.model.PickupRequestModel
 import com.offcourse.picko.data.place.model.PlaceModel
-import com.offcourse.picko.data.route.model.DestinationRoute
 import com.offcourse.picko.data.route.model.PickupRoutes
 import com.offcourse.picko.presentation.voice.VoiceListenState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /** 픽업 흐름의 단계. [PickupFlowSideEffect.NavigateTo]가 이동할 곳을 가리킨다. */
-enum class PickupStep { Contact, Place, Link, Nearby, Spot, Driving, Complete, Guide }
+enum class PickupStep { Contact, Place, Link, Nearby, Spot, Driving, Complete }
 
-/** 링크를 보내고 탑승자의 위치가 오기를 기다리는 진행 상태 */
-enum class LinkStatus { Idle, Sending, WaitingLocation }
+/**
+ * 링크를 보내고 탑승자의 위치가 오기를 기다리는 진행 상태.
+ * [Completed]는 위치를 받고 다음 화면을 준비하는 중이다. 다음 화면으로 넘어가기 전까지 로딩을 유지해, 확인 화면이 잠깐 다시 보이지 않게 한다.
+ */
+enum class LinkStatus { Idle, Sending, WaitingLocation, Completed }
 
 @Immutable
 data class PickupFlowState(
@@ -33,7 +35,6 @@ data class PickupFlowState(
     val vehicle: Coordinate? = null,
     val passenger: Coordinate? = null,
     val routes: PickupRoutes? = null,
-    val destinationRoute: DestinationRoute? = null,
     val isVoiceRetryVisible: Boolean = false,
     // 재요청 오버레이에서 마이크를 눌러 다시 듣는 상태
     val voice: VoiceListenState = VoiceListenState(),

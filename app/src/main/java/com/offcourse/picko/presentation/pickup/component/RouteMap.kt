@@ -3,7 +3,6 @@ package com.offcourse.picko.presentation.pickup.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.IntOffset
@@ -30,6 +30,7 @@ import com.kakao.vectormap.LatLng
 import com.kakao.vectormap.MapLifeCycleCallback
 import com.kakao.vectormap.MapView
 import com.kakao.vectormap.camera.CameraUpdateFactory
+import com.kakao.vectormap.route.RouteLine
 import com.kakao.vectormap.route.RouteLineOptions
 import com.kakao.vectormap.route.RouteLineSegment
 import com.kakao.vectormap.route.RouteLineStyle
@@ -39,12 +40,15 @@ import com.offcourse.picko.core.designsystem.theme.PickoTheme
 // 카카오 지도 줌 레벨. 클수록 넓게 보인다.
 private const val SINGLE_POINT_ZOOM_LEVEL = 16
 
+// 가까운 점들을 맞출 때 이 레벨보다 더 확대하지 않는다. 차량이 픽업 지점에 가까워져도 지도가 과하게 커지지 않게 한다.
+private const val FIT_MAX_ZOOM_LEVEL = 17
+
 // 경로선 굵기(px)
 private const val ROUTE_LINE_WIDTH = 16f
 
 // 마커가 잘리지 않도록 지도 가장자리에 두는 여백(px)
-private const val MAP_HORIZONTAL_PADDING = 220
-private const val MAP_VERTICAL_PADDING = 160
+private const val MAP_HORIZONTAL_PADDING = 160
+private const val MAP_VERTICAL_PADDING = 110
 
 // 마커 배지 중심에서 마커 왼쪽 위까지의 거리. PickoMapMarker 는 왼쪽 여백 12dp 에 배지 반지름 44dp 이고 높이 112dp 이다.
 private val MarkerAnchor = 56.dp
@@ -62,15 +66,19 @@ private val CameraGestures = listOf(
     GestureType.LongTapAndDrag,
 )
 
-/** 지도에 그릴 경로선. [points]는 순서대로 이어진다. */
-class MapRouteLine(
+/** 지도에 그릴 경로선. [points]는 순서대로 이어진다. 값으로 비교해 같은 경로면 지도를 다시 그리지 않는다. */
+data class MapRouteLine(
     val points: List<Coordinate>,
     val color: Color,
 )
 
-/** 지도 위 [coordinate]에 겹쳐 그릴 마커. [content]의 배지 중심이 좌표에 놓인다. */
+/**
+ * 지도 위 [coordinate]에 겹쳐 그릴 마커. [content]의 배지 중심이 좌표에 놓인다.
+ * 배지가 마커의 오른쪽 끝에 있으면(라벨이 왼쪽) [isBadgeAtEnd]를 켠다.
+ */
 class MapMarkerSlot(
     val coordinate: Coordinate,
+    val isBadgeAtEnd: Boolean = false,
     val content: @Composable () -> Unit,
 )
 
@@ -112,8 +120,15 @@ internal fun RouteMap(
             val point = markerPoints.getOrNull(index) ?: return@forEachIndexed
 
             Box(
-                modifier = Modifier.offset {
-                    IntOffset(point.x - MarkerAnchor.roundToPx(), point.y - MarkerAnchor.roundToPx())
+                modifier = Modifier.layout { measurable, constraints ->
+                    val placeable = measurable.measure(constraints)
+                    val anchor = MarkerAnchor.roundToPx()
+                    // 배지 중심이 마커 왼쪽 끝에서 anchor 만큼, 배지가 오른쪽 끝이면 오른쪽 끝에서 anchor 만큼 떨어져 있다.
+                    val x = if (marker.isBadgeAtEnd) point.x - (placeable.width - anchor) else point.x - anchor
+
+                    layout(placeable.width, placeable.height) {
+                        placeable.place(x, point.y - anchor)
+                    }
                 },
             ) {
                 marker.content()
@@ -167,24 +182,38 @@ internal fun RouteMap(
         }
     }
 
-    LaunchedEffect(kakaoMap, routes, markers) {
+    // 호출할 때마다 새로 만들어지는 리스트 대신 값을 키로 쓴다. 같은 좌표면 효과를 다시 돌리지 않아 경로선이 깜빡이지 않는다.
+    val markerCoordinates = markers.map { it.coordinate }
+    val drawableRoutes = routes.filter { it.points.size >= 2 }
+    val routeLines = remember(mapView) { mutableListOf<RouteLine>() }
+
+    LaunchedEffect(kakaoMap, drawableRoutes, markerCoordinates) {
         val map = kakaoMap ?: return@LaunchedEffect
 
         map.routeLineManager?.layer?.let { layer ->
-            layer.removeAll()
-            routes.filter { it.points.size >= 2 }.forEach { route ->
-                val segment = RouteLineSegment.from(
+            val segments = drawableRoutes.map { route ->
+                RouteLineSegment.from(
                     route.points.map { it.toLatLng() },
                     RouteLineStyle.from(ROUTE_LINE_WIDTH, route.color.toArgb()),
                 )
-                layer.addRouteLine(RouteLineOptions.from(segment))
+            }
+
+            if (routeLines.size == segments.size) {
+                // 선의 개수가 같으면 지우지 않고 좌표만 바꾼다.
+                routeLines.forEachIndexed { index, line -> line.changeSegments(segments[index]) }
+            } else {
+                layer.removeAll()
+                routeLines.clear()
+                segments.forEach { segment -> routeLines += layer.addRouteLine(RouteLineOptions.from(segment)) }
             }
         }
 
         val all = routes.flatMap { it.points } + markers.map { it.coordinate }
 
         when {
-            all.size >= 2 -> map.moveCamera(CameraUpdateFactory.fitMapPoints(all.map { it.toLatLng() }.toTypedArray()))
+            all.size >= 2 -> map.moveCamera(
+                CameraUpdateFactory.fitMapPoints(all.map { it.toLatLng() }.toTypedArray(), 0, FIT_MAX_ZOOM_LEVEL),
+            )
             all.size == 1 -> map.moveCamera(CameraUpdateFactory.newCenterPosition(all.first().toLatLng(), SINGLE_POINT_ZOOM_LEVEL))
         }
 
