@@ -3,10 +3,12 @@ package com.offcourse.picko.core.designsystem.component.dialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,15 +16,18 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import com.offcourse.picko.core.designsystem.component.PickoCarPreview
 import com.offcourse.picko.core.designsystem.component.PickoPreviewSurface
 import com.offcourse.picko.core.designsystem.theme.PickoTheme
@@ -46,14 +51,34 @@ fun PickoDialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        PickoDialogContent(
-            title = title,
-            description = description,
-            primaryText = primaryText,
-            onPrimaryClick = onPrimaryClick,
-            secondaryText = secondaryText,
-            onSecondaryClick = onSecondaryClick,
-        )
+        // 창 기본 dim 은 색과 농도를 정할 수 없어 끄고, 시안의 dim(#090E1B 65%)을 직접 깐다.
+        (LocalView.current.parent as? DialogWindowProvider)?.window?.setDimAmount(0f)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(PickoTheme.colors.overlayDim)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismissRequest,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            // 대화상자 안쪽을 눌러도 dim 의 닫기로 새지 않게 막는다.
+            PickoDialogContent(
+                title = title,
+                description = description,
+                primaryText = primaryText,
+                onPrimaryClick = onPrimaryClick,
+                secondaryText = secondaryText,
+                onSecondaryClick = onSecondaryClick,
+                modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {},
+                ),
+            )
+        }
     }
 }
 

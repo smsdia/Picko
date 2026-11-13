@@ -28,6 +28,9 @@ import com.offcourse.picko.core.common.extensions.dropShadowLevel1
 
 enum class PickoMapMarkerType { Driver, Pedestrian, Pickup }
 
+/** 배지를 기준으로 라벨이 놓이는 쪽. 가까이 놓인 마커의 라벨이 겹치지 않게 서로 다른 쪽에 둔다. */
+enum class PickoMapMarkerLabelSide { Start, End }
+
 private val BadgeSize = 88.dp
 private val HaloRadius = 120.dp
 private val MarkerHorizontalPadding = 12.dp
@@ -42,6 +45,7 @@ fun PickoMapMarker(
     title: String,
     description: String,
     modifier: Modifier = Modifier,
+    labelSide: PickoMapMarkerLabelSide = PickoMapMarkerLabelSide.End,
 ) {
     val haloColor = PickoTheme.colors.accentCornflower
 
@@ -49,7 +53,12 @@ fun PickoMapMarker(
         modifier = modifier
             .drawBehind {
                 if (type == PickoMapMarkerType.Driver) {
-                    val center = Offset(MarkerHorizontalPadding.toPx() + BadgeSize.toPx() / 2, size.height / 2)
+                    val badgeCenterX = if (labelSide == PickoMapMarkerLabelSide.End) {
+                        MarkerHorizontalPadding.toPx() + BadgeSize.toPx() / 2
+                    } else {
+                        size.width - MarkerHorizontalPadding.toPx() - BadgeSize.toPx() / 2
+                    }
+                    val center = Offset(badgeCenterX, size.height / 2)
 
                     drawCircle(
                         brush = Brush.radialGradient(
@@ -68,11 +77,16 @@ fun PickoMapMarker(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PickoMapMarkerBadge(type = type)
+        if (labelSide == PickoMapMarkerLabelSide.End) {
+            PickoMapMarkerBadge(type = type)
+        }
         PickoMapMarkerLabel(
             title = title,
             description = description,
         )
+        if (labelSide == PickoMapMarkerLabelSide.Start) {
+            PickoMapMarkerBadge(type = type)
+        }
     }
 }
 
@@ -151,6 +165,7 @@ private fun PickoMapMarkerPreview() {
                 type = PickoMapMarkerType.Pedestrian,
                 title = "탑승자",
                 description = "픽업 지점으로 이동 중",
+                labelSide = PickoMapMarkerLabelSide.Start,
             )
             PickoMapMarker(
                 type = PickoMapMarkerType.Pickup,
