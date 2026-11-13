@@ -39,7 +39,10 @@ android {
         buildConfigField("String", "PLEOS_CLIENT_ID", "\"${localProperty("pleos.client.id")}\"")
         buildConfigField("String", "PLEOS_CLIENT_SECRET", "\"${localProperty("pleos.client.secret")}\"")
         buildConfigField("String", "KAKAO_NATIVE", "\"${localProperty("kakao.native.key")}\"")
-
+        // 시연 차량(정해 둔 좌표를 따라 이동). local.properties 의 demo.drive=true 나 -Pdemo.drive=true 로 켠다. 디버그 빌드에서만 쓰인다.
+        val demoDrive = (findProperty("demo.drive") as String?) ?: localProperty("demo.drive")
+        buildConfigField("boolean", "DEMO_DRIVE", (demoDrive == "true").toString())
+        buildConfigField("String", "KAKAO_PLATFORM", "\"${localProperty("kakao.platform.key")}\"")
     }
 
     buildTypes {
@@ -73,6 +76,7 @@ dependencies {
     implementation(libs.pleos.fused.location)
     implementation(libs.pleos.speech.to.text)
     implementation(libs.pleos.text.to.speech)
+    implementation(libs.pleos.navi.helper)
     implementation(libs.kakao.maps)
 
     testImplementation(libs.bundles.unitTest)

@@ -113,7 +113,7 @@ Figma `shadow_level_1`, `shadow_level_2`를 `Modifier.dropShadow`로 옮긴 확�
 | `PickoPickupInfoCard`, `PickoNavigationStatusCard` | `card/` | 추천 픽업 장소와 도착 시간, 내비게이션 중 요약 |
 | `PickoPickupIndicator` | `indicator/` | SMART PICKUP 표시 |
 | `PickoLoadingIndicator` | `indicator/` | 점 세 개 로딩 표시 |
-| `PickoMapMarker`, `PickoMapMarkerBadge`, `PickoMapMarkerLabel` | `marker/` | 차량, 탑승자, 픽업 장소 마커 (`PickoMapMarkerType`) |
+| `PickoMapMarker`, `PickoMapMarkerBadge`, `PickoMapMarkerLabel` | `marker/` | 차량, 탑승자, 픽업 장소 마커 (`PickoMapMarkerType`). 가까운 마커의 라벨이 겹치면 `labelSide`(`PickoMapMarkerLabelSide`)로 라벨을 배지 왼쪽에 둔다. 지도에 올릴 때는 `MapMarkerSlot.isBadgeAtEnd`도 함께 켠다 |
 | `PickoDialog` | `dialog/` | 제목, 설명, 버튼 두 개의 확인 대화상자 |
 
 | 규칙 | 내용 |

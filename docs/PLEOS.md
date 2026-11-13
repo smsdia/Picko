@@ -7,6 +7,12 @@
 - 카테고리: Mobility Services. 주행 중에는 위치 기반 즉시 정보와 주차·충전 장소 탐색 같은 기능이 허용되는 범주다.
 - 주행 중 UI와 동작은 `CarUxRestrictions` 상태에 따라 축소하거나 비활성화한다.
 
+## 주행 중 사용 가능 표시
+
+- 차량이 주행 상태일 때 매니페스트에 `distractionOptimized`가 없는 액티비티는 "주행 중에는 사용할 수 없습니다."로 막힌다(에뮬레이터 확인, 2026-11-13). 주행 중에도 쓰는 `MainActivity`에 `<meta-data android:name="distractionOptimized" android:value="true" />`를 둔다. 이 메타데이터 형식은 AAOS 문서 기준이고 Pleos 문서에는 manifest 항목이 없다.
+- 에뮬레이터에서 주행 상태를 켜는 방법: `adb shell cmd car_service emulate-driving-state drive`(끄기는 `park`).
+- `CarUxRestrictions`에 따라 UI를 줄이는 처리는 아직 구현하지 않았다.
+
 ## 주행 중 금지·제한
 
 - 금지: 영상 재생, 게임, 웹 브라우징, 과한 애니메이션, 장식적 반복 움직임.
