@@ -19,7 +19,6 @@ import com.offcourse.picko.data.navi.repository.NaviRepository
 import com.offcourse.picko.data.place.model.PlaceModel
 import com.offcourse.picko.data.place.repository.PlaceRepository
 import com.offcourse.picko.core.common.model.distanceMetersTo
-import com.offcourse.picko.data.route.model.advanceTo
 import com.offcourse.picko.data.route.repository.RouteRepository
 import com.offcourse.picko.data.speech.repository.SpeechSynthesisRepository
 import com.offcourse.picko.data.vehicle.repository.VehicleRepository
@@ -364,7 +363,7 @@ class PickupFlowViewModel @Inject constructor(
     }
 
     /**
-     * 차량 위치가 바뀔 때마다 지도의 차량 마커와 경로 시작점을 옮긴다. 지도는 이 값으로 카메라를 다시 맞춘다.
+     * 차량 위치가 바뀔 때마다 지도의 차량 마커를 옮긴다. 지도는 이 값으로 지나간 경로를 지우고 카메라를 다시 맞춘다.
      * 몇 미터 안의 흔들림은 건너뛴다.
      */
     private fun trackVehicleLocation() {
@@ -374,14 +373,10 @@ class PickupFlowViewModel @Inject constructor(
                 val position = Coordinate(latitude = location.latitude, longitude = location.longitude)
 
                 _state.update { state ->
-                    val routes = state.routes ?: return@update state
                     val last = state.vehicle
                     if (last != null && last.distanceMetersTo(position) < VEHICLE_MOVE_THRESHOLD_METERS) return@update state
 
-                    state.copy(
-                        vehicle = position,
-                        routes = routes.copy(vehicle = routes.vehicle.advanceTo(position)),
-                    )
+                    state.copy(vehicle = position)
                 }
             }
         }
