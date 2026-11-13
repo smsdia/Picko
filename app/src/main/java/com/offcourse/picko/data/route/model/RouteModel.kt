@@ -14,13 +14,17 @@ data class RouteModel(
 
 /**
  * 이동한 [position]에서 시작하는 경로. 가장 가까운 꼭짓점까지는 지나간 것으로 보고 앞부분을 지운다.
- * 경로를 다시 구하지 않고 지도에 그린 선만 따라가게 하려는 근사다. 길을 벗어났는지는 따지지 않는다.
+ * 길을 벗어났는지는 따지지 않는 근사다.
  */
-fun RouteModel.advanceTo(position: Coordinate): RouteModel {
-    val nearest = points.indices.minByOrNull { index -> points[index].squaredDistanceTo(position) } ?: return this
+fun RouteModel.advanceTo(position: Coordinate): RouteModel =
+    copy(points = remainingPointsFrom(points, position).toImmutableList())
+
+/** [points] 중 [position] 이후에 남은 구간. 첫 점은 [position]이다. 지도 카메라를 남은 구간에 맞출 때 쓴다. */
+fun remainingPointsFrom(points: List<Coordinate>, position: Coordinate): List<Coordinate> {
+    val nearest = points.indices.minByOrNull { index -> points[index].squaredDistanceTo(position) } ?: return points
     val rest = points.drop(nearest + 1).ifEmpty { listOf(points.last()) }
 
-    return copy(points = (listOf(position) + rest).toImmutableList())
+    return listOf(position) + rest
 }
 
 // 가까운 점을 가릴 때만 쓰는 값이라 단위 변환 없이 위도·경도 차이의 제곱합으로 비교한다.

@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.offcourse.picko.core.designsystem.component.PickoCarPreview
@@ -47,33 +46,8 @@ fun PickoMapMarker(
     modifier: Modifier = Modifier,
     labelSide: PickoMapMarkerLabelSide = PickoMapMarkerLabelSide.End,
 ) {
-    val haloColor = PickoTheme.colors.accentCornflower
-
     Row(
-        modifier = modifier
-            .drawBehind {
-                if (type == PickoMapMarkerType.Driver) {
-                    val badgeCenterX = if (labelSide == PickoMapMarkerLabelSide.End) {
-                        MarkerHorizontalPadding.toPx() + BadgeSize.toPx() / 2
-                    } else {
-                        size.width - MarkerHorizontalPadding.toPx() - BadgeSize.toPx() / 2
-                    }
-                    val center = Offset(badgeCenterX, size.height / 2)
-
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            0f to haloColor.copy(alpha = 0.5f),
-                            0.45f to haloColor.copy(alpha = 0.23f),
-                            1f to haloColor.copy(alpha = 0f),
-                            center = center,
-                            radius = HaloRadius.toPx(),
-                        ),
-                        radius = HaloRadius.toPx(),
-                        center = center,
-                    )
-                }
-            }
-            .padding(horizontal = MarkerHorizontalPadding, vertical = 10.dp),
+        modifier = modifier.padding(horizontal = MarkerHorizontalPadding, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -103,9 +77,26 @@ fun PickoMapMarkerBadge(
     }
     // 픽업 아이콘은 배지 크기에 맞춰 그려져 있고, 나머지는 48dp 아이콘이다.
     val iconSize = if (type == PickoMapMarkerType.Pickup) BadgeSize else 48.dp
+    val haloColor = colors.accentCornflower
 
     Box(
         modifier = modifier
+            // 차량 마커는 배지 뒤로 빛이 퍼진다. 배지 밖으로 그려지므로 크기를 정하기 전에 둔다.
+            .drawBehind {
+                if (type == PickoMapMarkerType.Driver) {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            0f to haloColor.copy(alpha = 0.5f),
+                            0.45f to haloColor.copy(alpha = 0.23f),
+                            1f to haloColor.copy(alpha = 0f),
+                            center = center,
+                            radius = HaloRadius.toPx(),
+                        ),
+                        radius = HaloRadius.toPx(),
+                        center = center,
+                    )
+                }
+            }
             .size(BadgeSize)
             .dropShadowLevel1(CircleShape)
             .background(background, CircleShape)
