@@ -29,6 +29,7 @@ import com.offcourse.picko.presentation.pickup.PickupFlowViewModel
 import com.offcourse.picko.presentation.pickup.PickupStep
 import com.offcourse.picko.presentation.pickup.component.PickupFlowEffects
 import com.offcourse.picko.presentation.pickup.component.PickupHeading
+import com.offcourse.picko.presentation.pickup.component.PickupNoticeDialog
 import com.offcourse.picko.presentation.pickup.component.VoiceRetryOverlay
 import kotlinx.collections.immutable.persistentListOf
 
@@ -59,6 +60,8 @@ internal fun NearbyRoute(
         onVoiceAnnounce = viewModel::onVoiceAnnounce,
         onVoiceRetryDismiss = viewModel::onVoiceRetryDismissed,
     )
+
+    PickupNoticeDialog(notice = state.notice, viewModel = viewModel)
 }
 
 @Composable

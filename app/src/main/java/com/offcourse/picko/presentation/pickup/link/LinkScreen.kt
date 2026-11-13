@@ -31,6 +31,7 @@ import com.offcourse.picko.presentation.pickup.PickupFlowViewModel
 import com.offcourse.picko.presentation.pickup.PickupStep
 import com.offcourse.picko.presentation.pickup.component.LoadingContent
 import com.offcourse.picko.presentation.pickup.component.PickupFlowEffects
+import com.offcourse.picko.presentation.pickup.component.PickupNoticeDialog
 import com.offcourse.picko.presentation.pickup.component.highlightedText
 
 /** 탑승자에게 위치 공유 링크를 보낼지 확인하고, 보낸 뒤 위치가 오기를 기다리는 화면 */
@@ -62,6 +63,8 @@ internal fun LinkRoute(
         state = state,
         onSendClick = viewModel::onSendLinkClicked,
     )
+
+    PickupNoticeDialog(notice = state.notice, viewModel = viewModel)
 }
 
 @Composable

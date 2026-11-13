@@ -1,5 +1,6 @@
 package com.offcourse.picko.presentation.pickup
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,12 +16,14 @@ import com.offcourse.picko.data.gleo.model.PickupRequestModel
 import com.offcourse.picko.data.gleo.repository.GleoRepository
 import com.offcourse.picko.data.pickuplink.repository.PickupLinkRepository
 import com.offcourse.picko.data.navi.model.NaviDestinationModel
+import com.offcourse.picko.data.navi.model.NaviGuidanceResult
 import com.offcourse.picko.data.navi.repository.NaviRepository
 import com.offcourse.picko.data.place.model.PlaceModel
 import com.offcourse.picko.data.place.repository.PlaceRepository
 import com.offcourse.picko.core.common.model.distanceMetersTo
 import com.offcourse.picko.data.route.repository.RouteRepository
 import com.offcourse.picko.data.speech.repository.SpeechSynthesisRepository
+import com.offcourse.picko.data.vehicle.model.VehicleLocationException
 import com.offcourse.picko.data.vehicle.repository.VehicleRepository
 import com.offcourse.picko.domain.pickup.usecase.FindPickupRoutesUseCase
 import com.offcourse.picko.domain.pickup.usecase.ListenForPickupUseCase
@@ -211,12 +214,38 @@ class PickupFlowViewModel @Inject constructor(
                 coordinate = route.route.points.last(),
             )
 
-            if (!naviRepository.startGuidance(destination)) {
-                Timber.w("차량 내비에 연결하지 못해 안내를 시작하지 못했다")
+            val result = naviRepository.startGuidance(destination)
+            if (result == NaviGuidanceResult.Requested) {
+                finishFlow()
+            } else {
+                Timber.w("차량 내비 안내를 시작하지 못했다: %s", result)
+                _state.update { it.copy(notice = result.toNotice()) }
             }
-
-            finishFlow()
         }
+    }
+
+    fun onNoticeDismissed() {
+        _state.update { it.copy(notice = null) }
+    }
+
+    /** 알림 대화상자의 "다시 시도"(권한을 허용한 뒤에도 쓴다). 알림이 가리키던 단계를 다시 한다. */
+    fun onNoticeRetry() {
+        val notice = _state.value.notice ?: return
+
+        _state.update { it.copy(notice = null) }
+        when (notice) {
+            PickupNotice.LocationPermissionDenied, PickupNotice.LocationUnavailable ->
+                viewModelScope.launch { prepareSpot() }
+
+            PickupNotice.NaviUnavailable, PickupNotice.NaviRouteFailed -> onGuideClicked()
+
+            else -> Unit
+        }
+    }
+
+    /** 위치가 차량의 개인정보 보호 설정으로 막혔는지 확인하도록 시스템 안내 팝업을 연다. */
+    fun onLocationPrivacyCheckClicked(activityContext: Context) {
+        vehicleRepository.showLocationAccessBlockedPopup(activityContext)
     }
 
     // TODO: 음악 재생은 Pleos 에서 호출할 방법이 확인되면 구현한다.
@@ -345,7 +374,7 @@ class PickupFlowViewModel @Inject constructor(
         val passenger = state.passenger ?: return false
         val vehicle = vehicleCoordinate()
         if (vehicle == null) {
-            // TODO: 차량 위치를 받지 못했을 때 화면 상태로 알린다. 지금은 현재 화면에 머문다.
+            // 이유는 vehicleCoordinate 가 알림으로 남겼다. 지금 화면에 머물고 대화상자로 알린다.
             Timber.w("차량 위치를 받지 못해 픽업 경로를 만들지 못했다")
             return false
         }
@@ -369,23 +398,46 @@ class PickupFlowViewModel @Inject constructor(
     private fun trackVehicleLocation() {
         locationJob?.cancel()
         locationJob = viewModelScope.launch {
-            vehicleRepository.observeLocation().collect { location ->
-                val position = Coordinate(latitude = location.latitude, longitude = location.longitude)
+            try {
+                vehicleRepository.observeLocation().collect { location ->
+                    val position = Coordinate(latitude = location.latitude, longitude = location.longitude)
 
-                _state.update { state ->
-                    val last = state.vehicle
-                    if (last != null && last.distanceMetersTo(position) < VEHICLE_MOVE_THRESHOLD_METERS) return@update state
+                    _state.update { state ->
+                        val last = state.vehicle
+                        if (last != null && last.distanceMetersTo(position) < VEHICLE_MOVE_THRESHOLD_METERS) return@update state
 
-                    state.copy(vehicle = position)
+                        state.copy(vehicle = position)
+                    }
                 }
+            } catch (e: VehicleLocationException) {
+                // 이동 중에 위치가 끊기면 마커가 멈출 뿐이라 화면에서 흐름을 막지 않는다.
+                Timber.w(e, "차량 위치 수신이 끝났다")
             }
         }
     }
 
-    /** 차량의 현재 위치. 시간 안에 받지 못하면 null. */
-    private suspend fun vehicleCoordinate(): Coordinate? = withTimeoutOrNull(VEHICLE_LOCATION_TIMEOUT_MILLIS) {
-        vehicleRepository.observeLocation().firstOrNull()
-    }?.let { location -> Coordinate(latitude = location.latitude, longitude = location.longitude) }
+    /** 차량의 현재 위치. 받지 못하면 이유를 알림으로 남기고 null. */
+    private suspend fun vehicleCoordinate(): Coordinate? {
+        val notice = try {
+            val location = withTimeoutOrNull(VEHICLE_LOCATION_TIMEOUT_MILLIS) {
+                vehicleRepository.observeLocation().firstOrNull()
+            }
+            if (location != null) {
+                return Coordinate(latitude = location.latitude, longitude = location.longitude)
+            }
+            // 값도 오류도 없이 시간이 지났다. 개인정보 보호 설정으로 막힌 경우도 여기에 든다.
+            PickupNotice.LocationUnavailable
+        } catch (e: VehicleLocationException) {
+            when (e.reason) {
+                VehicleLocationException.Reason.Unsupported -> PickupNotice.LocationUnsupported
+                VehicleLocationException.Reason.PermissionDenied -> PickupNotice.LocationPermissionDenied
+                VehicleLocationException.Reason.Unavailable -> PickupNotice.LocationUnavailable
+            }
+        }
+
+        _state.update { it.copy(notice = notice) }
+        return null
+    }
 
     private fun respondToGleo(
         lookup: UiState<ContactLookupResult>,
@@ -443,6 +495,15 @@ class PickupFlowViewModel @Inject constructor(
         locationJob?.cancel()
         _sideEffect.trySend(PickupFlowSideEffect.FinishFlow)
     }
+}
+
+private fun NaviGuidanceResult.toNotice(): PickupNotice? = when (this) {
+    NaviGuidanceResult.Requested -> null
+    NaviGuidanceResult.NotConnected -> PickupNotice.NaviUnavailable
+    NaviGuidanceResult.LowBattery -> PickupNotice.NaviLowBattery
+    NaviGuidanceResult.RouteTooFar -> PickupNotice.NaviRouteTooFar
+    NaviGuidanceResult.RouteTooClose -> PickupNotice.NaviRouteTooClose
+    NaviGuidanceResult.RouteFailed -> PickupNotice.NaviRouteFailed
 }
 
 // 차량 도착 시간을 내비에 다시 묻는 간격. 호출 하나가 약 0.3초 걸린다. NaviHelper 의 onDrivingInfo 는 약 5분 간격이라 쓰지 않는다.

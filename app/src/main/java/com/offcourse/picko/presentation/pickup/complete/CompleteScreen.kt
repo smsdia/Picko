@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.offcourse.picko.R
 import com.offcourse.picko.core.designsystem.component.PickoCarPreview
 import com.offcourse.picko.core.designsystem.component.button.PickoButton
@@ -27,6 +29,7 @@ import com.offcourse.picko.data.gleo.model.PickupRequestModel
 import com.offcourse.picko.presentation.pickup.PickupFlowViewModel
 import com.offcourse.picko.presentation.pickup.PickupStep
 import com.offcourse.picko.presentation.pickup.component.PickupFlowEffects
+import com.offcourse.picko.presentation.pickup.component.PickupNoticeDialog
 
 /** 픽업을 마쳤음을 알리고 목적지 안내로 이어 주는 화면 */
 @Composable
@@ -43,10 +46,14 @@ internal fun CompleteRoute(
         onPickupRequested = onPickupRequested,
     )
 
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     CompleteScreen(
         onGuideClick = viewModel::onGuideClicked,
         onMusicClick = viewModel::onMusicClicked,
     )
+
+    PickupNoticeDialog(notice = state.notice, viewModel = viewModel)
 }
 
 // Figma `PICKO / Pickup Complete / Content`(머리글 구분선 기준) 치수. 글자 상자 높이 차이는 줄 높이로 보정했다.
