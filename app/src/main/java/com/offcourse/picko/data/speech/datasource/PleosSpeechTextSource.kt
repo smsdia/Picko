@@ -4,10 +4,8 @@ import ai.pleos.playground.stt.SpeechToText
 import ai.pleos.playground.stt.constant.ErrorType
 import ai.pleos.playground.stt.constant.Mode
 import ai.pleos.playground.stt.listener.OnInitializeListener
-import ai.pleos.playground.stt.listener.OnServerConnectionListener
 import ai.pleos.playground.stt.listener.ResultListener
 import android.content.Context
-import com.offcourse.picko.BuildConfig
 import com.offcourse.picko.data.speech.model.SpeechRecognitionError
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
@@ -23,16 +21,16 @@ import timber.log.Timber
 private const val LISTEN_TIMEOUT_MILLIS = 15_000L
 
 /**
- * Pleos SpeechToText SDK 로 듣는다. 듣기마다 객체를 만들고 초기화, 앱 등록, 인식을 거쳐 끝나면 해제한다.
- * 서버 모드(HYBRID)라 클라이언트 ID/시크릿이 필요하다. 값이 없으면 [FakeSpeechTextSource]를 쓴다.
+ * Pleos SpeechToText SDK 로 듣는다. 듣기마다 객체를 만들고 초기화와 인식을 거쳐 끝나면 해제한다.
+ * 서버 인식은 앱 등록(클라이언트 ID/시크릿)이 필요하고 우리 키는 서버에서 거부된 적이 있어, 등록이 필요 없는 온디바이스 모드만 쓴다.
  *
- * TODO: 듣기마다 초기화와 앱 등록을 다시 해서 시작이 느리면 객체를 재사용한다.
+ * TODO: 듣기마다 초기화해서 시작이 느리면 객체를 재사용한다.
  */
 class PleosSpeechTextSource @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : SpeechTextSource {
     override fun listen(): Flow<SpeechTextEvent> = callbackFlow {
-        val speechToText = SpeechToText(context, Mode.HYBRID)
+        val speechToText = SpeechToText(context, Mode.ON_DEVICE)
         var lastText = ""
 
         fun finishWith(event: SpeechTextEvent) {
@@ -79,22 +77,9 @@ class PleosSpeechTextSource @Inject constructor(
         speechToText.initialize(
             object : OnInitializeListener {
                 override fun onSuccess() {
-                    speechToText.registerApp(
-                        BuildConfig.PLEOS_CLIENT_ID,
-                        BuildConfig.PLEOS_CLIENT_SECRET,
-                        object : OnServerConnectionListener {
-                            override fun onConnected() {
-                                speechToText.setLocale(Locale.KOREA)
-                                speechToText.addListener(resultListener)
-                                speechToText.request()
-                            }
-
-                            override fun onFailed(errorType: ErrorType) {
-                                Timber.w("STT register failed: %s", errorType)
-                                finishWith(SpeechTextEvent.Failed(errorType.toError()))
-                            }
-                        },
-                    )
+                    speechToText.setLocale(Locale.KOREA)
+                    speechToText.addListener(resultListener)
+                    speechToText.request()
                 }
 
                 override fun onFailure(errorType: ErrorType) {
