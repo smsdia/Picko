@@ -2,6 +2,7 @@ package com.offcourse.picko.data.navi.repositoryimpl
 
 import com.offcourse.picko.core.common.model.distanceMetersTo
 import com.offcourse.picko.data.navi.model.NaviDestinationModel
+import com.offcourse.picko.data.navi.model.NaviGuidanceResult
 import com.offcourse.picko.data.navi.model.NaviTripModel
 import com.offcourse.picko.data.navi.repository.NaviRepository
 import com.offcourse.picko.data.vehicle.repositoryimpl.DEMO_SPEED_METERS_PER_SECOND
@@ -26,7 +27,8 @@ class DemoNaviRepository @Inject constructor(
         )
     }
 
-    override suspend fun startGuidance(destination: NaviDestinationModel): Boolean = real.startGuidance(destination)
+    override suspend fun startGuidance(destination: NaviDestinationModel): NaviGuidanceResult =
+        real.startGuidance(destination)
 
     private companion object {
         const val SECONDS_PER_MINUTE = 60

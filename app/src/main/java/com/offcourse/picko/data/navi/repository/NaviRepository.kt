@@ -1,6 +1,7 @@
 package com.offcourse.picko.data.navi.repository
 
 import com.offcourse.picko.data.navi.model.NaviDestinationModel
+import com.offcourse.picko.data.navi.model.NaviGuidanceResult
 import com.offcourse.picko.data.navi.model.NaviTripModel
 
 /** 차량 내비(Pleos NaviHelper)로 소요 시간을 묻고 안내를 맡긴다. 경로의 좌표는 받을 수 없다. */
@@ -13,7 +14,7 @@ interface NaviRepository {
 
     /**
      * 차량 내비에 [destination]으로 경로 탐색과 안내를 요청한다. 내비 앱이 앱 영역에 올라와 우리 앱이 가려질 수 있다.
-     * 요청을 보냈으면 true, 내비에 연결하지 못했으면 false.
+     * `requestRoute` 성공은 탐색 완료가 아니고 오류는 뒤늦게 이벤트로 오므로, 요청 뒤 잠시 기다려 온 오류를 결과로 돌려준다.
      */
-    suspend fun startGuidance(destination: NaviDestinationModel): Boolean
+    suspend fun startGuidance(destination: NaviDestinationModel): NaviGuidanceResult
 }
