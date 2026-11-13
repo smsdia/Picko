@@ -14,6 +14,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.milliseconds
 
 // 내비가 소요 시간을 계산해 알려 주기까지 기다리는 상한. 에뮬레이터에서 약 0.3초가 걸렸다.
 private const val TRIP_TIMEOUT_MILLIS = 5_000L
@@ -27,7 +28,7 @@ class NaviHelperRepository @Inject constructor(
     override suspend fun previewTrip(destination: NaviDestinationModel): NaviTripModel? {
         val helper = connection.awaitHelper() ?: return null
 
-        return withTimeoutOrNull(TRIP_TIMEOUT_MILLIS) {
+        return withTimeoutOrNull(TRIP_TIMEOUT_MILLIS.milliseconds) {
             coroutineScope {
                 // 요청을 보내기 전에 구독을 시작해서 빠른 응답을 놓치지 않는다.
                 val reply = async(start = CoroutineStart.UNDISPATCHED) {

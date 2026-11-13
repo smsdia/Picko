@@ -6,7 +6,6 @@ import com.offcourse.picko.data.route.dto.KakaoDirectionsDto
 import java.net.HttpURLConnection
 import java.net.URL
 import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -16,7 +15,6 @@ private const val DIRECTIONS_URL = "https://apis-navi.kakaomobility.com/v1/direc
 private const val TIMEOUT_MILLIS = 5_000
 
 /** 카카오모빌리티 자동차 길찾기 호출. 실패하면 예외 대신 null을 돌려준다. */
-@Singleton
 class KakaoDirectionsDataSource @Inject constructor() {
     private val json = Json { ignoreUnknownKeys = true }
 
