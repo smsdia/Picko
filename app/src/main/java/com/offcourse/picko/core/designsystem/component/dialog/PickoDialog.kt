@@ -84,7 +84,7 @@ fun PickoDialog(
 }
 
 @Composable
-internal fun PickoDialogContent(
+fun PickoDialogContent(
     title: String,
     description: String,
     primaryText: String,

@@ -33,7 +33,7 @@ import com.offcourse.picko.presentation.pickup.component.PickupNoticeDialog
 
 /** 픽업을 마쳤음을 알리고 목적지 안내로 이어 주는 화면 */
 @Composable
-internal fun CompleteRoute(
+fun CompleteRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,

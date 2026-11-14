@@ -39,7 +39,7 @@ import com.offcourse.picko.presentation.pickup.component.PickupFlowEffects
 
 /** 흐름의 첫 화면. 연락처를 찾는 동안 보이고, 결과에 따라 다음 단계로 넘어간다. */
 @Composable
-internal fun ResolveRoute(
+fun ResolveRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,

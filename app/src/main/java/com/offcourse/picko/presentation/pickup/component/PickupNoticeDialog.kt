@@ -17,7 +17,7 @@ import com.offcourse.picko.presentation.pickup.PickupNotice
  * 위치 사유에는 차량의 개인정보 보호 설정을 언급하고, 설정 확인 버튼으로 시스템 안내 팝업을 연다.
  */
 @Composable
-internal fun PickupNoticeDialog(
+fun PickupNoticeDialog(
     notice: PickupNotice?,
     viewModel: PickupFlowViewModel,
 ) {

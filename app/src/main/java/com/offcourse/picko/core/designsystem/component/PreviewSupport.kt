@@ -21,7 +21,7 @@ annotation class PickoCarPreview
 
 /** [PickoCarPreview]가 그리는 영역의 배경. 테마는 시스템 설정(`uiMode`)을 따른다. */
 @Composable
-internal fun PickoPreviewSurface(content: @Composable () -> Unit) {
+fun PickoPreviewSurface(content: @Composable () -> Unit) {
     PickoTheme {
         Box(
             modifier = Modifier

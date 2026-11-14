@@ -17,7 +17,7 @@ import com.offcourse.picko.presentation.pickup.PickupStep
  * 그 사이 보낸 이벤트는 새 화면이 활성화되면 전달된다.
  */
 @Composable
-internal fun PickupFlowEffects(
+fun PickupFlowEffects(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,

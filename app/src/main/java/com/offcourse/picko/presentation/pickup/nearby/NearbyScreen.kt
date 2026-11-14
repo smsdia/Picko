@@ -35,7 +35,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 /** 탑승자 위치를 반영해 추천한 안전한 정차 장소를 고르는 화면 */
 @Composable
-internal fun NearbyRoute(
+fun NearbyRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,

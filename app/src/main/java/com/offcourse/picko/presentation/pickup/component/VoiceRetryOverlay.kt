@@ -37,7 +37,7 @@ private val TextGap = 24.dp
  * 마이크를 누르면 여기서 다시 듣고, 새 요청을 읽으면 흐름이 새로 시작된다. 뒤로 가기나 바깥 터치로 닫는다.
  */
 @Composable
-internal fun VoiceRetryOverlay(
+fun VoiceRetryOverlay(
     voice: VoiceListenState,
     onMicClick: () -> Unit,
     onAnnounce: (String) -> Unit,

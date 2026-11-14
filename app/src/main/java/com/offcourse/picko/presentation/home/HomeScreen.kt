@@ -60,7 +60,7 @@ import kotlin.math.roundToInt
  * 최상위 화면에서 뒤로 가면 앱을 종료하지 않고 숨긴다.
  */
 @Composable
-internal fun HomeRoute(
+fun HomeRoute(
     viewModel: HomeViewModel,
     onPickupRequested: (PickupRequestModel) -> Unit,
 ) {

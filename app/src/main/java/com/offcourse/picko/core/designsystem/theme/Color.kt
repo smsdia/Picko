@@ -115,7 +115,7 @@ fun cssLinearGradient(angleDeg: Float, vararg colorStops: Pair<Float, Color>): B
     }
 
 /** CSS 규칙대로 그라데이션 선의 시작점과 끝점을 구한다. 선의 길이는 모서리까지 닿도록 `|w·sin| + |h·cos|`이다. */
-internal fun cssGradientLine(angleDeg: Float, size: Size): Pair<Offset, Offset> {
+fun cssGradientLine(angleDeg: Float, size: Size): Pair<Offset, Offset> {
     val rad = Math.toRadians(angleDeg.toDouble())
     val dx = sin(rad).toFloat()
     val dy = -cos(rad).toFloat()

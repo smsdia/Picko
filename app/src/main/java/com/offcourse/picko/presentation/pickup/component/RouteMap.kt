@@ -119,7 +119,7 @@ class MapMarkerSlot(
  * 카카오 SDK 타입은 이 파일 밖으로 내보내지 않는다. Preview 에서는 지도를 그리지 못해 마커만 보인다.
  */
 @Composable
-internal fun RouteMap(
+fun RouteMap(
     routes: List<MapRouteLine>,
     markers: List<MapMarkerSlot>,
     onMapError: (Exception) -> Unit,

@@ -68,7 +68,7 @@ class NaviHelperRepository @Inject constructor(
     }
 }
 
-internal fun NaviErrorCode.toGuidanceResult(): NaviGuidanceResult = when (this) {
+fun NaviErrorCode.toGuidanceResult(): NaviGuidanceResult = when (this) {
     NaviErrorCode.CAUSE_LOW_BATTERY -> NaviGuidanceResult.LowBattery
     NaviErrorCode.CAUSE_SEARCH_ROUTE_OVER_DISTANCE -> NaviGuidanceResult.RouteTooFar
     NaviErrorCode.CAUSE_SEARCH_ROUTE_TOO_SHORT_DISTANCE -> NaviGuidanceResult.RouteTooClose

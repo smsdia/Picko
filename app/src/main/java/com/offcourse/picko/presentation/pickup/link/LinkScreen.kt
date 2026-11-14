@@ -36,7 +36,7 @@ import com.offcourse.picko.presentation.pickup.component.highlightedText
 
 /** 탑승자에게 위치 공유 링크를 보낼지 확인하고, 보낸 뒤 위치가 오기를 기다리는 화면 */
 @Composable
-internal fun LinkRoute(
+fun LinkRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
