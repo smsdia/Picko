@@ -27,6 +27,7 @@
 - 진입점 `ai.pleos.playground.navi.helper.NaviHelper(context)`. 사용 순서: 생성 → `initialize(onConnected, onFailed)` → `onConnected`에서 `addListener(NaviHelperEventListener)` → API 호출 → 결과는 콜백 → `removeListener()`, `release()`
 - 호출: `requestRoute(RouteInfo)`(목적지 설정과 경로 요청을 겸함), `cancelRoute()`, `changeRouteOption(RouteOption)`, `requestReRoute()`, `requestRouteWithWaypoints`, `addWaypoint`, `removeWaypoint`, `requestTrip(TripRequest)`(안내 시작 없이 거리·도착 예정), `requestNavigationScreen(NavigationScreenRequest)`(`Foreground`, `OverviewRoute`, `EditRoute`, `SearchPlace`, `POIDetailPopup` 등), 조회 `getRouteStateInfo`, `getDestinationInfo`, `getTBTInfo`, `getCurrentLocationInfo`
 - 결과는 `NaviHelperEventListener` 콜백이다. `onRouteStarted(RouteStartInfo: duration, distance)`, `onRoutingCompleted`, `onTripInfo(TripInfo: distance, eta)`, `onDestinationInfo`, `onTBTInfo`, `onNavigationStatus`, `onError(NaviErrorCode)`. `requestRoute()`가 성공해도 탐색 완료가 아니다.
+- `NaviErrorCode`(`ai.pleos.playground.navi.constants`, 소스는 `navi-data` 3.0.4)에는 `CAUSE_LOW_BATTERY`, `CAUSE_SEARCH_ROUTE_OVER_DISTANCE`, `CAUSE_SEARCH_ROUTE_TOO_SHORT_DISTANCE` 등이 있다. 우리 앱은 `requestRoute` 뒤 3초 동안 `onError`를 기다려 이 셋과 그 밖의 실패를 안내 결과로 바꾼다(3초는 측정값이 아닌 추정). 에뮬레이터(2026-11-13)에서 정상 경로는 오류 없이 내비가 경로 선택 화면으로 앱 영역을 차지했고, 배터리를 3%로 낮춰도(`PUT /vehicle/ev-battery?field=soc&value=3`, 콘솔) `CAUSE_LOW_BATTERY` 오류 없이 안내가 시작돼 오류 대화상자는 재현하지 못했다. 내비가 앱 영역을 차지한 동안 우리 앱의 대화상자가 보이는지도 확인 전이다.
 - **경로 좌표(폴리라인)를 돌려주는 API는 없다.** `TripSummary.routePoints`는 출발·경유·도착 지점뿐이다. 그래서 `RouteMap`처럼 앱이 선을 그리려면 다른 경로 소스가 필요하다.
 - 차량 도착 시간 갱신(2026-11-13 에뮬레이터): `onDrivingInfo`는 안내 중에만 오고 약 5분 간격이라 쓰지 않는다. 픽업 이동 중에는 `requestTrip`을 10초 간격으로 다시 불러 갱신한다(호출 하나 약 0.3초, 내비 앱이 실행 중이어야 응답하고 아니면 타임아웃). 위치가 움직일 때 값이 줄어드는지는 에뮬레이터에서 확인하지 못했다.
 - 앱 연동: `data/navi`(`NaviHelperRepository`)가 `requestTrip`(소요 시간 미리 보기)과 `requestRoute`(안내 시작)만 쓴다. 안내를 시작하면 앱은 흐름을 끝내고 안내는 내비가 맡는다. 권한 `NAVI_ROUTE`, `NAVI_ROUTE_SEARCH`는 메인 매니페스트에 있다.
@@ -43,7 +44,7 @@
 - 권한: `pleos.car.permission.STT_SERVICE` (런타임 권한은 문서에 없다). 선언하지 않으면 초기화나 호출이 실패할 수 있다.
 - 진입점 `ai.pleos.playground.stt.SpeechToText`, 생성 예: `SpeechToText(applicationContext, Mode.HYBRID)`. 패키지: `stt.constant`(`Mode`, `ErrorType`), `stt.listener`(`ResultListener`, `OnInitializeListener`, `OnServerConnectionListener`)
 - 사용 순서: 생성 → `initialize(OnInitializeListener)` → `registerApp(clientID, clientSecret, OnServerConnectionListener)` → `onConnected()` 뒤에 `setLocale(Locale.KOREA)`, `addListener(ResultListener)`, `request()` → 끝나면 `stop()`, `removeListener()`, `release()`. `release()` 뒤에 다시 쓰려면 새 객체를 만든다. `setLocale`은 `request()` 전에 한다.
-- `Mode`: HYBRID(기본, 서버 우선, 앱 등록 필수), SERVER(앱 등록 필수), ON_DEVICE(앱 등록 선택). 클라이언트 ID/시크릿은 Pleos Playground My Project에서 발급한다.
+- `Mode`: HYBRID(기본, 서버 우선, 앱 등록 필수), SERVER(앱 등록 필수), ON_DEVICE(앱 등록 선택). 클라이언트 ID/시크릿은 Pleos Playground My Project에서 발급한다. 우리 앱은 `ON_DEVICE`만 쓰고 `registerApp`을 부르지 않는다. 에뮬레이터(2026-11-13)에서 `createStt ON_DEVICE`로 연결되고 `ko_KR` 로케일로 오디오 처리(`recognize` 카운트 증가)가 도는 것을 로그로 확인했다. 호스트 `say`로 재생한 한국어 음성은 에뮬레이터 마이크로 들어가지 않아 인식 품질은 확인하지 못했다.
 - `ResultListener`: `onReady()`, `onStartedRecognition()`, `onUpdated(stt: String, completed: Boolean)`, `onUpdatedEpdData(on, off)`, `onUpdatedRms(rms)`, `onEndedRecognition()`, `onError(ErrorType)`. 신뢰도 필드는 없다. `request()`가 마이크를 켠다.
 - `ErrorType`: AUDIO_ERROR, INVALID_REQUEST_ERROR, MIC_ERROR, NETWORK_ERROR, NOT_SUPPORTED_API, ON_DEVICE_ENGINE_ERROR, PERMISSION_DENIED, SERVER_INTERNAL_ERROR, TIMEOUT, UNAUTHENTICATED, UNAVAILABLE_LANGUAGE, UNKNOWN
 - 음성을 텍스트로만 바꾼다. 사람과 장소 같은 값은 앱이 문장에서 읽어야 한다(`SpokenPickupParser`).
@@ -85,11 +86,13 @@
 - 공식 샘플: https://github.com/Pleos-Playground/pleos-sample-fusedlocation-app (확인일 2026-11-08). 구조: `FusedLocationClient`(SDK 래퍼) → `MainViewModel` → `MainScreen`. 샘플 빌드 설정은 AGP 8.8.2, Kotlin 2.0.0, compileSdk 35, minSdk 24이며 우리 프로젝트 버전과 다르다. 의존성을 붙일 때 호환을 직접 확인한다.
 - FusedLocation 사용 흐름: `isSupported()` 확인 → 권한 요청 → `initialize()` → `registerFusedLocationCallback(FusedLocationListener)` 또는 `getLastKnownLocation(listener)` → 종료 시 `unregisterFusedLocationCallback`, `release()`
 - 권한 `pleos.car.permission.FUSED_LOCATION`은 `dangerous`라 매니페스트 선언만으로는 `SecurityException: need Permission`이 난다. 런타임 허용이 필요하다(에뮬레이터 `pm grant`로 확인). `LocationData`는 위도, 경도, 고도, 방위(heading), `confidence`(에뮬레이터에서 GPS 정확도 m와 같은 값), 시각이다. 에뮬레이터는 `adb emu geo fix` 좌표를 1초마다 전달한다.
+- `showLocationAccessBlockedPopup()`(소스 `FusedLocation-1.1.3-sources.jar`와 에뮬레이터 2026-11-13 확인): 넘겨받은 `Context`로 `ai.umos.intent.action.SENSOR_PRIVACY_DIALOG`(extra `sensor=3`)를 `startActivity`한다. `initialize()` 없이 부를 수 있고, `Activity` 컨텍스트가 필요하다. 에뮬레이터에서는 "위치정보 사용을 허용할까요?"라는 시스템 팝업이 `취소`/`허용` 버튼과 함께 뜨고, `허용`을 누르면 `location_mode`가 0에서 3으로 바뀐다. 안내만 하는 팝업이 아니라 위치를 켜 준다.
+- SDK는 개인정보 보호 설정으로 막힌 상태를 따로 알리지 않는다(`FusedLocationListener.onError`는 일반 `Exception`뿐). 에뮬레이터에서 `adb shell settings put secure location_mode 0`이면 콜백이 한 번도 오지 않아 우리 앱의 5초 상한이 "받지 못함"으로 처리했다. 복구는 `location_mode 3`이다.
 - 리스너: `FusedLocationListener`(`onChanged(location: LocationData?)`, `onError(exception)`), `ProximityAlertListener`(`onRegistered(alertId)`, `onTransition(event)`, `onError(exception)`). 패키지: `ai.pleos.playground.location.fused.*`
 - 근접 알림: `addProximityAlert(ProximityAlertRequest, listener)`, `removeProximityAlert(alertId)`, 이벤트 `ProximityAlertEvent`(ENTER/EXIT)
 - 에뮬레이터 테스트: 앱 실행 후 `adb emu geo fix <경도> <위도>`(경도가 먼저). 목 위치는 `adb shell appops set --user current <패키지> android:mock_location allow` 후 `LocationManager` 테스트 프로바이더로 주입한다.
 - Vehicle SDK는 시작 가이드에서 Pleos Maven 저장소로 가져오며(문서상 2.3.1), 에뮬레이터는 Android SDK API 34, 프로젝트 minSdk 28 이상, RAM 4GB, Cold boot가 필요하다.
-- 서버 연결이 필요한 SDK(TextToSpeech, SpeechToText)는 콘솔의 클라이언트 ID/시크릿이 필요하다.
+- 서버 연결이 필요한 모드(TextToSpeech, SpeechToText의 HYBRID·SERVER)는 콘솔의 클라이언트 ID/시크릿이 필요하다. 온디바이스 모드는 필요 없다.
 
 ## Gleo Interface 상세
 
