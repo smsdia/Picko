@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -31,10 +32,10 @@ import com.offcourse.picko.core.designsystem.theme.PickoTheme
  * `uiMode` 변경은 재생성 없이 받아야 변화 순간을 볼 수 있어 매니페스트에서 `configChanges`를 선언했다.
  */
 class LightExperimentActivity : ComponentActivity(), SensorEventListener {
-    private var uiModeNight by mutableStateOf(0)
+    private var uiModeNight by mutableIntStateOf(0)
     private var uiModeLog by mutableStateOf(emptyList<String>())
     private var lux by mutableStateOf<Float?>(null)
-    private var luxSamples by mutableStateOf(0)
+    private var luxSamples by mutableIntStateOf(0)
     private var hasLightSensor = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
