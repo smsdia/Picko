@@ -38,7 +38,8 @@
     <string name="voice_announce_not_understood">잘 알아듣지 못했어요. 다시 말씀해 주세요.</string>
     <string name="home_voice_timeout">말씀이 들리지 않았어요. 마이크를 눌러 다시 말씀해 주세요.</string>
     <string name="home_voice_network">네트워크 연결을 확인하고 마이크를 눌러 다시 시도해 주세요.</string>
-    <string name="home_voice_microphone">마이크를 사용할 수 없어요. 마이크를 눌러 다시 시도해 주세요.</string>
+    <string name="home_voice_microphone">마이크를 사용할 수 없어요. 차량의 개인정보 보호 설정에서 마이크가 꺼져 있는지 확인한 뒤 마이크를 눌러 다시 시도해 주세요.</string>
+    <string name="home_voice_not_authorized">음성 인식을 사용할 권한이 없어요. 앱 권한을 확인해 주세요.</string>
     <string name="home_voice_failed">음성 인식에 실패했어요. 마이크를 눌러 다시 시도해 주세요.</string>
     <string name="home_voice_cancel">취소하기</string>
 
@@ -83,6 +84,29 @@
     <string name="complete_subtitle">탑승자와 함께 목적지로 이동해 보세요.</string>
     <string name="complete_guide">목적지 안내하기</string>
     <string name="complete_music">음악 재생하기</string>
+
+    <!-- 픽업 흐름: 알림 대화상자 (위치와 내비 안내를 이어 가지 못한 사유) -->
+    <string name="notice_confirm">확인</string>
+    <string name="notice_close">닫기</string>
+    <string name="notice_retry">다시 시도</string>
+    <string name="notice_location_unsupported_title">이 차량에서는 위치를 사용할 수 없어요</string>
+    <string name="notice_location_unsupported_description">차량 위치 서비스를 지원하지 않는 환경이에요.\n픽업 경로의 출발지에 차량 위치가 필요해서 이어갈 수 없어요.</string>
+    <string name="notice_location_permission_title">차량 위치 권한이 필요해요</string>
+    <string name="notice_location_permission_description">픽업 경로의 출발지로 차량의 현재 위치를 사용해요.\n위치 권한을 허용해 주세요.</string>
+    <string name="notice_location_permission_allow">권한 허용</string>
+    <string name="notice_location_unavailable_title">차량 위치를 받지 못했어요</string>
+    <string name="notice_location_unavailable_description">차량의 개인정보 보호 설정에서 위치 공유가 꺼져 있으면 위치를 받을 수 없어요.\n설정을 확인한 뒤 다시 시도해 주세요.</string>
+    <string name="notice_location_privacy_check">개인정보 설정 확인</string>
+    <string name="notice_navi_unavailable_title">차량 내비에 연결하지 못했어요</string>
+    <string name="notice_navi_unavailable_description">내비게이션이 실행 중인지 확인한 뒤 다시 시도해 주세요.</string>
+    <string name="notice_navi_low_battery_title">배터리가 부족해요</string>
+    <string name="notice_navi_low_battery_description">배터리가 부족해서 목적지 경로를 만들 수 없어요.</string>
+    <string name="notice_navi_too_far_title">목적지가 너무 멀어요</string>
+    <string name="notice_navi_too_far_description">경로를 찾을 수 있는 거리를 넘었어요.</string>
+    <string name="notice_navi_too_close_title">목적지가 너무 가까워요</string>
+    <string name="notice_navi_too_close_description">현재 위치와 목적지가 가까워서 안내할 경로가 없어요.</string>
+    <string name="notice_navi_route_failed_title">경로를 찾지 못했어요</string>
+    <string name="notice_navi_route_failed_description">경로 탐색에 문제가 생겼어요. 잠시 뒤 다시 시도해 주세요.</string>
 
     <!-- 디자인 시스템 컴포넌트 -->
     <string name="result_card_toll_label">통행료</string>

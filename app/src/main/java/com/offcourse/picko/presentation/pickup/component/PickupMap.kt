@@ -19,7 +19,7 @@ import com.offcourse.picko.data.route.model.PickupRoutes
 
 /** 차량, 탑승자, 픽업 지점 마커와 두 경로를 그린 지도. 픽업 지점 추천과 내비게이션 화면이 함께 쓴다. */
 @Composable
-internal fun PickupMap(
+fun PickupMap(
     spot: PlaceModel,
     routes: PickupRoutes,
     modifier: Modifier = Modifier,

@@ -33,7 +33,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 /** 사용자가 말한 장소와 맞는 후보를 고르는 화면 */
 @Composable
-internal fun PlaceRoute(
+fun PlaceRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,

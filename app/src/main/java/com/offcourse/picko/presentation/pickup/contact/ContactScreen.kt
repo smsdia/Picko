@@ -33,7 +33,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 /** 같은 이름의 연락처가 여럿일 때 보이는 화면 */
 @Composable
-internal fun ContactRoute(
+fun ContactRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,

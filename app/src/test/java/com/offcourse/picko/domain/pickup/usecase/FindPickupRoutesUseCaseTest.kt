@@ -2,6 +2,7 @@ package com.offcourse.picko.domain.pickup.usecase
 
 import com.offcourse.picko.core.common.model.Coordinate
 import com.offcourse.picko.data.navi.model.NaviDestinationModel
+import com.offcourse.picko.data.navi.model.NaviGuidanceResult
 import com.offcourse.picko.data.navi.model.NaviTripModel
 import com.offcourse.picko.data.navi.repository.NaviRepository
 import com.offcourse.picko.data.route.model.DestinationRoute
@@ -40,7 +41,8 @@ class FindPickupRoutesUseCaseTest {
                 return trip
             }
 
-            override suspend fun startGuidance(destination: NaviDestinationModel): Boolean = error("쓰지 않는다")
+            override suspend fun startGuidance(destination: NaviDestinationModel): NaviGuidanceResult =
+                error("쓰지 않는다")
         }
 
     private suspend fun FindPickupRoutesUseCase.find() = invoke(

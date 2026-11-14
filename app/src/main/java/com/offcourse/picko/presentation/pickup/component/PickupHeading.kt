@@ -10,7 +10,7 @@ import com.offcourse.picko.core.designsystem.theme.PickoTheme
 
 /** 선택 화면 위쪽의 제목과 안내 문구 */
 @Composable
-internal fun PickupHeading(
+fun PickupHeading(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,

@@ -38,7 +38,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 /** 픽업 지점으로 이동하는 동안의 내비게이션 화면. 픽업을 마치거나 취소를 요청한다. */
 @Composable
-internal fun DrivingRoute(
+fun DrivingRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,

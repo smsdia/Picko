@@ -34,7 +34,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 /** 추천된 픽업 지점을 지도와 도착 시간으로 보여 주고 내비게이션 안내를 시작하는 화면 */
 @Composable
-internal fun SpotRoute(
+fun SpotRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,

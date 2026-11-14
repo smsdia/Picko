@@ -29,12 +29,13 @@ import com.offcourse.picko.presentation.pickup.PickupFlowViewModel
 import com.offcourse.picko.presentation.pickup.PickupStep
 import com.offcourse.picko.presentation.pickup.component.PickupFlowEffects
 import com.offcourse.picko.presentation.pickup.component.PickupHeading
+import com.offcourse.picko.presentation.pickup.component.PickupNoticeDialog
 import com.offcourse.picko.presentation.pickup.component.VoiceRetryOverlay
 import kotlinx.collections.immutable.persistentListOf
 
 /** 탑승자 위치를 반영해 추천한 안전한 정차 장소를 고르는 화면 */
 @Composable
-internal fun NearbyRoute(
+fun NearbyRoute(
     viewModel: PickupFlowViewModel,
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
@@ -59,6 +60,8 @@ internal fun NearbyRoute(
         onVoiceAnnounce = viewModel::onVoiceAnnounce,
         onVoiceRetryDismiss = viewModel::onVoiceRetryDismissed,
     )
+
+    PickupNoticeDialog(notice = state.notice, viewModel = viewModel)
 }
 
 @Composable

@@ -26,7 +26,7 @@ private const val SPLASH_DURATION_MILLIS = 1_500L
 
 /** 앱을 열면 잠깐 보이는 첫 화면 */
 @Composable
-internal fun SplashRoute(onFinished: () -> Unit) {
+fun SplashRoute(onFinished: () -> Unit) {
     val currentOnFinished = rememberUpdatedState(onFinished)
 
     LaunchedEffect(Unit) {

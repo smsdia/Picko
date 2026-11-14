@@ -59,8 +59,8 @@ abstract fun bindVehicleRepository(impl: FakeVehicleRepository): VehicleReposito
 | --- | --- | --- |
 | `contact` | 이름으로 연락처 조회 | 실제 (`ContactRepositoryImpl`) |
 | `gleo` | Gleo 요청 파싱과 콜백 | 실제 (`GleoRepositoryImpl`) |
-| `speech` | 말로 하는 픽업 요청 듣기(STT)와 문장 해석, 안내 문구 읽기(TTS) | 실제 (`SpeechRecognitionRepositoryImpl`, `PleosSpeechSynthesisRepository`). 클라이언트 ID/시크릿이 없으면 STT 엔진만 가짜(`FakeSpeechTextSource`). TTS는 온디바이스라 키가 필요 없다 |
-| `vehicle` | 차량 위치 | 실제 (`FusedLocationVehicleRepository`). 위치 권한을 못 받거나 SDK 오류면 값을 내보내지 않고 끝나며, 호출하는 쪽(`PickupFlowViewModel`)이 5초 상한을 둔다. SDK 가 없는 환경에서는 `FakeVehicleRepository`로 바인딩을 바꾼다 |
+| `speech` | 말로 하는 픽업 요청 듣기(STT)와 문장 해석, 안내 문구 읽기(TTS) | 실제 (`SpeechRecognitionRepositoryImpl`·`PleosSpeechTextSource`, `PleosSpeechSynthesisRepository`). STT와 TTS 모두 온디바이스(`Mode.ON_DEVICE`)라 앱 등록과 클라이언트 ID/시크릿이 필요 없다. STT는 에뮬레이터에서 `ON_DEVICE`로 연결되고 한국어(`ko_KR`)로 오디오를 처리하는 것까지 확인했고, 실제 발화 인식 품질은 확인 전이다 |
+| `vehicle` | 차량 위치 | 실제 (`FusedLocationVehicleRepository`). 위치를 받지 못하면 이유(권한 거부, 미지원, 받지 못함)를 `VehicleLocationException`으로 전달하고 화면이 알림 대화상자로 안내한다. 값도 오류도 없는 경우가 있어 호출하는 쪽(`PickupFlowViewModel`)이 5초 상한을 두고 "받지 못함"으로 본다. `showLocationAccessBlockedPopup`은 사용자가 대화상자의 `개인정보 설정 확인`을 눌렀을 때만 연다. SDK 가 없는 환경에서는 `FakeVehicleRepository`로 바인딩을 바꾼다 |
 | `place` | 장소 검색, 주변 안전 정차 장소 추천 | 가짜 (`FakePlaceRepository`) |
 | `pickuplink` | 위치 공유 링크 전송, 탑승자 위치 대기, 취소 알림 | 가짜 (`FakePickupLinkRepository`) |
 | `route` | 지도에 그릴 차량·도보 경로와 목적지 경로 | 차량 경로는 실제 (`KakaoRouteRepository`, 카카오모빌리티 자동차 길찾기). 도보와 목적지 경로는 가짜 (`FakeRouteRepository`), 호출이 실패해도 차량 경로를 가짜로 대신한다 |

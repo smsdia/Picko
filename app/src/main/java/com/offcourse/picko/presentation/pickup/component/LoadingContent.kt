@@ -23,7 +23,7 @@ import com.offcourse.picko.core.designsystem.theme.PickoTheme
 
 /** 로고와 로딩 점, 안내 문구가 가운데에 놓이는 대기 화면의 내용 */
 @Composable
-internal fun LoadingContent(
+fun LoadingContent(
     message: AnnotatedString,
     modifier: Modifier = Modifier,
 ) {
@@ -55,7 +55,7 @@ internal fun LoadingContent(
 }
 
 /** [template] 안의 [highlight]에 해당하는 부분만 [color]로 칠한다. 없으면 그대로 돌려준다. */
-internal fun highlightedText(
+fun highlightedText(
     template: String,
     highlight: String,
     color: Color,

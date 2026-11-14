@@ -28,7 +28,8 @@ fun voiceMessage(voice: VoiceListenState, example: String): String {
             SpeechRecognitionError.Timeout -> stringResource(R.string.home_voice_timeout)
             SpeechRecognitionError.Network -> stringResource(R.string.home_voice_network)
             SpeechRecognitionError.Microphone -> stringResource(R.string.home_voice_microphone)
-            SpeechRecognitionError.NotAuthorized, SpeechRecognitionError.Unknown ->
+            SpeechRecognitionError.NotAuthorized -> stringResource(R.string.home_voice_not_authorized)
+            SpeechRecognitionError.Unknown ->
                 stringResource(R.string.home_voice_failed)
         }
     }

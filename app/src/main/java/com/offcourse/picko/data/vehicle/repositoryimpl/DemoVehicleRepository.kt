@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 // 시연 차량의 속도(m/s)와 위치 갱신 간격. 40m/s 는 시속 144km 로 시연이 길어지지 않게 빠르게 잡았다.
-internal const val DEMO_SPEED_METERS_PER_SECOND = 40.0
+const val DEMO_SPEED_METERS_PER_SECOND = 40.0
 private const val DEMO_TICK_MILLIS = 1_000L
 
 // 시연 차량의 출발지(서울역)와 도착지(대치동 학원가 사거리). 이 둘의 자동차 경로 좌표를 그대로 따라간다.
@@ -74,7 +74,7 @@ class DemoVehicleRepository @Inject constructor(
 }
 
 /** [points]를 따라 [stepMeters]마다 한 점씩 찍은 경로. 처음과 끝 지점은 반드시 포함한다. */
-internal fun buildDemoPath(points: List<Coordinate>, stepMeters: Double): List<Coordinate> {
+fun buildDemoPath(points: List<Coordinate>, stepMeters: Double): List<Coordinate> {
     val result = mutableListOf(points.first())
     var carry = 0.0 // 마지막으로 찍은 점부터 지금 선분 시작까지 온 거리
 

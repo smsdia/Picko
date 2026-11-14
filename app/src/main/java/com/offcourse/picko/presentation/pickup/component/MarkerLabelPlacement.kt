@@ -5,16 +5,16 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 
 /** 배지를 기준으로 라벨이 놓이는 쪽. 선언 순서가 기본 우선순위다. */
-internal enum class LabelSide { End, Start, Top, Bottom }
+enum class LabelSide { End, Start, Top, Bottom }
 
-internal class LabelPlacement(val side: LabelSide, val rect: IntRect)
+class LabelPlacement(val side: LabelSide, val rect: IntRect)
 
 /**
  * 라벨을 놓을 자리를 고른다. [preferred]가 아직 들어맞으면 그대로 두고(위치가 조금씩 바뀔 때 라벨이 튀지 않게),
  * 아니면 오른쪽, 왼쪽, 위, 아래 순서로 [bounds] 안에 들어오고 [occupied]와 겹치지 않는 첫 자리를 쓴다.
  * 어디도 맞지 않으면 오른쪽 자리를 [bounds] 안으로 밀어 넣는다.
  */
-internal fun placeLabel(
+fun placeLabel(
     badge: IntRect,
     labelSize: IntSize,
     bounds: IntRect,

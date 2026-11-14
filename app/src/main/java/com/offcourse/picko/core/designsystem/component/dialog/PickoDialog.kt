@@ -36,6 +36,7 @@ import com.offcourse.picko.core.common.extensions.dropShadowLevel2
 /**
  * 제목, 설명, 버튼 두 개로 이루어진 확인 대화상자.
  * 왼쪽 강조 버튼이 [primaryText]이고, 오른쪽 보조 버튼이 [secondaryText]이다.
+ * [secondaryText]가 null 이면 강조 버튼 하나만 보여 준다. TODO(figma): 버튼 하나짜리 시안이 없어 같은 스타일로 폭만 넓혔다.
  */
 @Composable
 fun PickoDialog(
@@ -43,9 +44,9 @@ fun PickoDialog(
     description: String,
     primaryText: String,
     onPrimaryClick: () -> Unit,
-    secondaryText: String,
-    onSecondaryClick: () -> Unit,
     onDismissRequest: () -> Unit,
+    secondaryText: String? = null,
+    onSecondaryClick: () -> Unit = {},
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -83,12 +84,12 @@ fun PickoDialog(
 }
 
 @Composable
-internal fun PickoDialogContent(
+fun PickoDialogContent(
     title: String,
     description: String,
     primaryText: String,
     onPrimaryClick: () -> Unit,
-    secondaryText: String,
+    secondaryText: String?,
     onSecondaryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -136,13 +137,15 @@ internal fun PickoDialogContent(
                 contentColor = colors.onAccent,
                 modifier = Modifier.weight(1f),
             )
-            DialogButton(
-                text = secondaryText,
-                onClick = onSecondaryClick,
-                background = colors.buttonNeutral,
-                contentColor = colors.onButtonNeutral,
-                modifier = Modifier.weight(1f),
-            )
+            if (secondaryText != null) {
+                DialogButton(
+                    text = secondaryText,
+                    onClick = onSecondaryClick,
+                    background = colors.buttonNeutral,
+                    contentColor = colors.onButtonNeutral,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }

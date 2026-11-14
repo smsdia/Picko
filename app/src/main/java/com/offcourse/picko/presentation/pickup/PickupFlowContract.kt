@@ -21,6 +21,18 @@ enum class PickupStep { Contact, Place, Link, Nearby, Spot, Driving, Complete }
  */
 enum class LinkStatus { Idle, Sending, WaitingLocation, Completed }
 
+/** 흐름을 이어 가지 못하게 한 사유. 대화상자로 알린다. */
+enum class PickupNotice {
+    LocationUnsupported,
+    LocationPermissionDenied,
+    LocationUnavailable,
+    NaviUnavailable,
+    NaviLowBattery,
+    NaviRouteTooFar,
+    NaviRouteTooClose,
+    NaviRouteFailed,
+}
+
 @Immutable
 data class PickupFlowState(
     val request: PickupRequestModel,
@@ -39,6 +51,7 @@ data class PickupFlowState(
     // 재요청 오버레이에서 마이크를 눌러 다시 듣는 상태
     val voice: VoiceListenState = VoiceListenState(),
     val isCancelDialogVisible: Boolean = false,
+    val notice: PickupNotice? = null,
 ) {
     /** 연락처 후보가 여럿일 때 고를 목록 */
     val contactCandidates: ImmutableList<ContactModel>
