@@ -30,8 +30,9 @@ internal fun PickupFlowEffects(
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            viewModel.sideEffect.collect { effect ->
-                when (effect) {
+            // Flow 의 collect 는 이벤트를 꺼낸 뒤 취소되면 이벤트를 잃는다. 꺼내자마자 처리하는 반복문으로 받는다.
+            while (true) {
+                when (val effect = viewModel.receiveSideEffect()) {
                     is PickupFlowSideEffect.NavigateTo -> currentOnNavigate.value(effect.step)
                     PickupFlowSideEffect.FinishFlow -> currentOnFlowFinished.value()
                     is PickupFlowSideEffect.StartPickup -> currentOnPickupRequested.value(effect.request)

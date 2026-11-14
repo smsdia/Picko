@@ -41,7 +41,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -76,8 +75,15 @@ class PickupFlowViewModel @Inject constructor(
     )
     val state: StateFlow<PickupFlowState> = _state.asStateFlow()
 
-    private val _sideEffect = Channel<PickupFlowSideEffect>(Channel.BUFFERED)
-    val sideEffect: Flow<PickupFlowSideEffect> = _sideEffect.receiveAsFlow()
+    // 받는 쪽이 이벤트를 꺼낸 직후 취소되면(권한 요청 화면이 떠서 RESUMED 를 벗어나는 순간 등) 이벤트가 사라진다.
+    // 그때는 다시 넣어 다음 수집자가 받게 한다.
+    private val _sideEffect: Channel<PickupFlowSideEffect> = Channel(
+        capacity = Channel.BUFFERED,
+        onUndeliveredElement = { effect -> _sideEffect.trySend(effect) },
+    )
+
+    /** 다음 이동 이벤트를 기다린다. 꺼낸 뒤 곧바로 처리해야(중간에 멈추지 않아야) 취소로 사라지지 않는다. */
+    suspend fun receiveSideEffect(): PickupFlowSideEffect = _sideEffect.receive()
 
     private var lookupJob: Job? = null
     private var linkJob: Job? = null
