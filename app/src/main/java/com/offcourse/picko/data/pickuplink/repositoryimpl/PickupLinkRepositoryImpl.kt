@@ -1,0 +1,133 @@
+package com.offcourse.picko.data.pickuplink.repositoryimpl
+
+import com.offcourse.picko.core.common.model.Coordinate
+import com.offcourse.picko.core.localstorage.session.SessionTokenStorage
+import com.offcourse.picko.data.contact.model.ContactModel
+import com.offcourse.picko.data.pickuplink.datasource.PickoSessionDataSource
+import com.offcourse.picko.data.pickuplink.datasource.PickoSessionSocket
+import com.offcourse.picko.data.pickuplink.datasource.SocketEnd
+import com.offcourse.picko.data.pickuplink.dto.CancelSessionRequestDto
+import com.offcourse.picko.data.pickuplink.dto.CreateSessionRequestDto
+import com.offcourse.picko.data.pickuplink.model.PickoServerException
+import com.offcourse.picko.data.pickuplink.model.PickupSessionEndedException
+import com.offcourse.picko.data.pickuplink.model.SmsNotSentException
+import com.offcourse.picko.data.pickuplink.repository.PickupLinkRepository
+import com.offcourse.picko.data.place.model.PlaceModel
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import timber.log.Timber
+
+// TODO(vehicle-info): 서버의 vehicleModel, vehiclePlate가 필수인데 Pleos SDK 공식 문서에서 차종과 번호판을 주는
+//  API를 확인하지 못해 임시 고정값을 보낸다. `CarInfo.getCRNInfo`가 번호판인지는 문서에 없어 확인 전이다.
+//  실제 값을 얻는 방법이 정해지면 바꾼다. 번호판은 개인정보라 저장하면 암호화한다.
+private const val TEMPORARY_VEHICLE_MODEL = "현대 아반떼"
+private const val TEMPORARY_VEHICLE_PLATE = "123가 4567"
+
+private const val METERS_PER_KM = 1_000.0
+private const val CANCEL_REASON = "driver_canceled"
+private const val COMPLETE_REASON = "pickup_completed"
+private const val HTTP_SERVER_ERROR_MIN = 500
+
+/**
+ * 세션 만들기(문자 발송 포함)와 취소는 Picko 서버로 보낸다. 토큰은 [SessionTokenStorage]에 암호화해 두어
+ * 앱이 꺼졌다 켜져도 취소할 수 있다.
+ *
+ * 탑승자 위치는 세션을 만든 뒤 WebSocket([PickoSessionSocket])으로 받는다. 차량 위치도 같은 연결로 보낸다.
+ * 픽업 지점을 고르기 전에 링크를 보내는 흐름(주변 장소 추천 경로)은 서버 모델과 맞지 않아 [fallback]으로 대신한다.
+ */
+@Singleton
+class PickupLinkRepositoryImpl @Inject constructor(
+    private val dataSource: PickoSessionDataSource,
+    private val tokenStorage: SessionTokenStorage,
+    private val socket: PickoSessionSocket,
+    private val fallback: FakePickupLinkRepository,
+) : PickupLinkRepository {
+    @Volatile
+    private var sessionPickup: Coordinate? = null
+
+    override suspend fun sendLink(contact: ContactModel, pickup: PlaceModel?) {
+        if (pickup == null) {
+            sessionPickup = null
+            fallback.sendLink(contact, pickup = null)
+            return
+        }
+
+        // 이전 흐름이 취소되지 못한 채 남은 세션이 있으면 먼저 정리한다. 실패해도 새 세션 만들기는 막지 않는다.
+        try {
+            cancelSession()
+        } catch (e: PickoServerException) {
+            Timber.w(e, "남은 세션을 정리하지 못했다")
+        }
+
+        val response = dataSource.createSession(pickup.toRequest(contact))
+        tokenStorage.save(response.token)
+        sessionPickup = pickup.coordinate
+
+        if (!response.smsSent) throw SmsNotSentException(response.smsDetail)
+
+        socket.connect(response.token)
+    }
+
+    override suspend fun awaitPassengerLocation(): Coordinate {
+        if (sessionPickup == null) return fallback.awaitPassengerLocation()
+
+        // 위치가 오거나 서버가 세션을 끝낼 때까지 기다린다. 오래 걸리면 호출하는 쪽이 취소한다.
+        val state = socket.state.first { it.pedestrian != null || it.end != null }
+        state.end?.let { throw PickupSessionEndedException(isCanceled = it == SocketEnd.SessionCanceled) }
+
+        return checkNotNull(state.pedestrian)
+    }
+
+    override fun observePassengerLocation(): Flow<Coordinate> {
+        if (sessionPickup == null) return emptyFlow()
+
+        return socket.state
+            .map { it.pedestrian }
+            .filterNotNull()
+            .distinctUntilChanged()
+    }
+
+    override fun sendVehicleLocation(location: Coordinate) {
+        if (sessionPickup == null) return
+
+        socket.sendVehicleLocation(location)
+    }
+
+    override suspend fun cancelSession() = closeSession(CANCEL_REASON)
+
+    override suspend fun completeSession() = closeSession(COMPLETE_REASON)
+
+    private suspend fun closeSession(reason: String) {
+        val token = tokenStorage.get() ?: return
+
+        socket.close()
+
+        try {
+            dataSource.cancelSession(CancelSessionRequestDto(token = token, reason = reason))
+        } catch (e: PickoServerException) {
+            // 연결이 안 되거나 서버 오류면 나중에 다시 닫을 수 있게 토큰을 남긴다.
+            Timber.w(e, "세션 닫기 요청 실패")
+            if (e.code == null || e.code >= HTTP_SERVER_ERROR_MIN) throw e
+        }
+
+        tokenStorage.clear()
+        sessionPickup = null
+    }
+
+    private fun PlaceModel.toRequest(contact: ContactModel) = CreateSessionRequestDto(
+        pickupLat = coordinate.latitude,
+        pickupLng = coordinate.longitude,
+        pickupName = name,
+        vehicleDistanceM = distanceKm * METERS_PER_KM,
+        vehicleEtaMin = durationMinutes.toDouble(),
+        vehicleModel = TEMPORARY_VEHICLE_MODEL,
+        vehiclePlate = TEMPORARY_VEHICLE_PLATE,
+        passengerPhone = contact.phoneNumber.filter(Char::isDigit).ifEmpty { null },
+    )
+}
