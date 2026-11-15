@@ -14,7 +14,9 @@
 | Pleos 앱 카테고리, 주행 제한, 디자인, 기기 환경 | [PLEOS](PLEOS.md) |
 | 키, 토큰, 개인정보, 로그 | [SECURITY](SECURITY.md) |
 | Pleos SDK 목록, 진입점, 권한 (SDK 코드를 쓰기 전) | [pleos-sdk-index](references/pleos-sdk-index.md) |
+| Picko 서버 연동 (세션 REST, WebSocket 프로토콜, 문자 발송) | [picko-server-api](references/picko-server-api.md) |
 | 카카오 지도 (지도, POI, 키 해시) | [kakao-maps](references/kakao-maps.md) |
+| 카카오 API를 새로 부르거나 호출 수가 바뀌는 구현, 호출 테스트 (쿼터, 요금, 흐름당 호출 수, 쿼터 가드) | [kakao-api-quota](references/kakao-api-quota.md) |
 
 | 폴더 | 담는 것 |
 | --- | --- |
