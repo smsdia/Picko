@@ -8,9 +8,8 @@ import kotlinx.coroutines.flow.Flow
 interface PickupLinkRepository {
     /**
      * 픽업 지점 [pickup]으로 세션을 만들고 탑승자에게 위치 공유 링크를 보낸다. 실패하면 예외를 던진다.
-     * 픽업 지점을 아직 고르지 않았으면(null) 세션을 만들 수 없어 가짜 구현으로 대신한다.
      */
-    suspend fun sendLink(contact: ContactModel, pickup: PlaceModel?)
+    suspend fun sendLink(contact: ContactModel, pickup: PlaceModel)
 
     /**
      * 탑승자가 위치를 공유할 때까지 기다렸다가 그 위치를 돌려준다.

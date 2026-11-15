@@ -45,14 +45,12 @@ private const val HTTP_SERVER_ERROR_MIN = 500
  * 앱이 꺼졌다 켜져도 취소할 수 있다.
  *
  * 탑승자 위치는 세션을 만든 뒤 WebSocket([PickoSessionSocket])으로 받는다. 차량 위치도 같은 연결로 보낸다.
- * 픽업 지점을 고르기 전에 링크를 보내는 흐름(주변 장소 추천 경로)은 서버 모델과 맞지 않아 [fallback]으로 대신한다.
  */
 @Singleton
 class PickupLinkRepositoryImpl @Inject constructor(
     private val dataSource: PickoSessionDataSource,
     private val tokenStorage: SessionTokenStorage,
     private val socket: PickoSessionSocket,
-    private val fallback: FakePickupLinkRepository,
 ) : PickupLinkRepository {
     // 흐름을 맡은 ViewModel이 사라져도 세션 닫기를 끝낼 수 있게 앱 수명 동안 사는 범위를 따로 둔다.
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -60,13 +58,7 @@ class PickupLinkRepositoryImpl @Inject constructor(
     @Volatile
     private var sessionPickup: Coordinate? = null
 
-    override suspend fun sendLink(contact: ContactModel, pickup: PlaceModel?) {
-        if (pickup == null) {
-            sessionPickup = null
-            fallback.sendLink(contact, pickup = null)
-            return
-        }
-
+    override suspend fun sendLink(contact: ContactModel, pickup: PlaceModel) {
         // 이전 흐름이 취소되지 못한 채 남은 세션이 있으면 먼저 정리한다. 실패해도 새 세션 만들기는 막지 않는다.
         try {
             cancelSession()
@@ -92,8 +84,6 @@ class PickupLinkRepositoryImpl @Inject constructor(
     }
 
     override suspend fun awaitPassengerLocation(): Coordinate {
-        if (sessionPickup == null) return fallback.awaitPassengerLocation()
-
         // 위치가 오거나 서버가 세션을 끝낼 때까지 기다린다. 오래 걸리면 호출하는 쪽이 취소한다.
         val state = socket.state.first { it.pedestrian != null || it.end != null }
         state.end?.let { throw PickupSessionEndedException(isCanceled = it == SocketEnd.SessionCanceled) }

@@ -13,7 +13,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /** 픽업 흐름의 단계. [PickupFlowSideEffect.NavigateTo]가 이동할 곳을 가리킨다. */
-enum class PickupStep { Contact, Place, Link, Nearby, Spot, Driving, Complete }
+enum class PickupStep { Contact, Nearby, Link, Spot, Driving, Complete }
 
 /**
  * 링크를 보내고 탑승자의 위치가 오기를 기다리는 진행 상태.
@@ -35,6 +35,9 @@ enum class PickupNotice {
     /** 카카오 API 하루 한도에 닿아 장소 검색과 경로를 만들 수 없다. 알린 뒤 흐름을 끝낸다. */
     KakaoQuotaExceeded,
 
+    /** 서버에서 픽업 후보를 받지 못했다(연결 실패, 서버 오류). 다시 시도할 수 있다. */
+    RecommendFailed,
+
     /** 탑승자에게 링크를 보내지 못했다(문자 발송 실패, 서버 연결 실패). 다시 시도할 수 있다. */
     LinkSendFailed,
 
@@ -48,9 +51,9 @@ data class PickupFlowState(
     // 조회를 시작하기 전이면 null
     val contactLookup: UiState<ContactLookupResult>? = null,
     val selectedContact: ContactModel? = null,
-    val placeCandidates: ImmutableList<PlaceModel> = persistentListOf(),
+    // 서버가 목적지로 추천한 픽업 후보
     val nearbyCandidates: ImmutableList<PlaceModel> = persistentListOf(),
-    // 장소를 말한 경로에서는 장소 확인 뒤에, 추천 경로에서는 주변 장소 추천 뒤에 정해진다.
+    // 픽업 후보 중 고른 지점
     val selectedPlace: PlaceModel? = null,
     val linkStatus: LinkStatus = LinkStatus.Idle,
     val vehicle: Coordinate? = null,

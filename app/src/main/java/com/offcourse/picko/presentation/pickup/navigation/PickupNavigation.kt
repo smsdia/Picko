@@ -17,7 +17,6 @@ import com.offcourse.picko.presentation.pickup.contact.ContactRoute
 import com.offcourse.picko.presentation.pickup.driving.DrivingRoute
 import com.offcourse.picko.presentation.pickup.link.LinkRoute
 import com.offcourse.picko.presentation.pickup.nearby.NearbyRoute
-import com.offcourse.picko.presentation.pickup.place.PlaceRoute
 import com.offcourse.picko.presentation.pickup.resolve.ResolveRoute
 import com.offcourse.picko.presentation.pickup.spot.SpotRoute
 import kotlinx.serialization.Serializable
@@ -29,7 +28,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PickupFlowDestination(
     val passenger: String,
-    // null 이면 추천을 요청한 것
+    // null 이면 장소를 말하지 않은 것. 서버 추천에 목적지가 필요해 다시 말해 달라고 요청한다.
     val place: String? = null,
     // Gleo 호출로 시작했으면 true. 앱이 직접 들은 요청이면 false 라서 Gleo 에 콜백을 보내지 않는다.
     val isGleoRequest: Boolean = true,
@@ -41,9 +40,6 @@ data object ResolveDestination
 
 @Serializable
 data object ContactDestination
-
-@Serializable
-data object PlaceDestination
 
 @Serializable
 data object LinkDestination
@@ -75,7 +71,6 @@ fun NavController.navigateToPickupFlow(
 private fun NavController.navigateToStep(step: PickupStep) {
     val destination: Any = when (step) {
         PickupStep.Contact -> ContactDestination
-        PickupStep.Place -> PlaceDestination
         PickupStep.Link -> LinkDestination
         PickupStep.Nearby -> NearbyDestination
         PickupStep.Spot -> SpotDestination
@@ -116,16 +111,6 @@ fun NavGraphBuilder.pickupNavGraph(
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
                 onPickupRequested = onPickupRequested,
-            )
-        }
-
-        composable<PlaceDestination> { entry ->
-            PlaceRoute(
-                viewModel = navController.pickupFlowViewModel(entry),
-                onNavigate = navController::navigateToStep,
-                onFlowFinished = onFlowFinished,
-                onPickupRequested = onPickupRequested,
-                onBack = { navController.popBackStack() },
             )
         }
 

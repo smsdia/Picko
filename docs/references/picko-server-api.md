@@ -10,8 +10,9 @@
 | --- | --- | --- |
 | `POST /api/sessions` | 세션 생성. 응답의 `token`이 세션 토큰이고, 요청에 `passengerPhone`이 있으면 서버가 문자를 보낸다(`smsSent`, `smsDetail`) | `PickupLinkRepositoryImpl.sendLink` |
 | `POST /api/sessions/cancel` | 세션 취소(토큰, 사유) | `PickupLinkRepositoryImpl.cancelSession`(사유 `driver_canceled`), `completeSession`(사유 `pickup_completed`) |
-| `GET /api/pickup/recommend` | 차량·목적지 좌표로 픽업 후보 추천 | 쓰지 않는다 (주변 장소 추천은 가짜) |
+| `GET /api/pickup/recommend` | 차량·목적지 좌표로 픽업 후보 추천(`vLat`, `vLng`, `dLat`, `dLng`, `limit` 기본 3). 탑승자 위치는 받지 않는다 | `PickupRecommendRepositoryImpl.recommend` (`limit=3`) |
 
+- 추천 응답(2026-11-15 실제 호출 확인, 스웨거에는 응답 스키마가 없다): `{"count", "recommendations":[...]}`. 후보는 서버가 점수로 정렬해 준다(금지 구역 지점은 뒤로). 앱이 쓰는 필드는 `lat`, `lng`, `label`, `vehicleDistanceM`, `vehicleEtaMin`뿐이다. 후보 화면에는 이름, 거리, 시간만 보여 준다. `category`(편의점 등), `source`, `walkFromDestination*`(픽업 지점에서 목적지까지의 도보, 탑승자 위치가 아니다), `reasons`(영어 디버그 문자열)는 쓰지 않는다. 후보가 없을 때와 오류 때의 응답은 확인하지 못했다
 - 문자는 서버가 SOLAPI로 보낸다. 서버 아웃바운드 IP가 SOLAPI에 등록되어 있지 않으면 `smsSent=false`, `smsDetail`에 `http_403`이 온다(2026-11-15 확인).
 - 서버에 세션 완료 API가 없어 픽업 완료도 취소 API로 닫는다. 탑승자 웹은 사유와 상관없이 "운전자 요청으로 픽업이 취소되었어요"를 보여 준다(`handleCanceled`, 2026-11-15 `app.js`). 소켓만 닫으면 웹은 세션이 계속 열려 있는 것으로 보인다.
 - 앱이 세션을 닫는 경우(모두 `POST /api/sessions/cancel`, 사유로 구분한다): 운전자 취소 `driver_canceled`, 픽업 완료 `pickup_completed`, 문자 발송 실패 `sms_failed`(세션을 만든 직후 바로 닫는다), 흐름이 끝났는데 열려 있던 세션 `flow_abandoned`(ViewModel이 사라질 때 백그라운드에서 닫는다)
