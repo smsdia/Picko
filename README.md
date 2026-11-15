@@ -360,7 +360,7 @@ Pleos STT·TTS는 온디바이스 모드로 사용하므로 Pleos 클라이언�
 <img src="https://img.shields.io/badge/DOWNLOAD_APK-416DE9?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
 </a>
 &nbsp;
-<a href="https://github.com/smsdia/Picko/tree/develop/apk">
+<a href="https://github.com/smsdia/Picko/tree/main/apk">
 <img src="https://img.shields.io/badge/APK_DIRECTORY-253858?style=for-the-badge&logo=github&logoColor=white" alt="APK Directory" />
 </a>
 
@@ -369,48 +369,34 @@ Pleos STT·TTS는 온디바이스 모드로 사용하므로 Pleos 클라이언�
 <br>
 
 <table width="100%">
+
 <thead><tr><th align="center">Item</th><th align="center">Details</th></tr></thead>
+
 <tbody>
+
 <tr><td align="center"><strong>Version</strong></td><td align="center"><code>1.0</code></td></tr>
+
 <tr><td align="center"><strong>APK</strong></td><td align="center"><a href="https://github.com/smsdia/Picko/raw/main/apk/OffCourse_Picko_release.apk"><code>OffCourse_Picko_release.apk</code></a></td></tr>
-<tr><td align="center"><strong>APK Directory</strong></td><td align="center"><a href="https://github.com/smsdia/Picko/tree/develop/apk"><code>develop/apk</code></a></td></tr>
+
+<tr><td align="center"><strong>APK Directory</strong></td><td align="center"><a href="https://github.com/smsdia/Picko/tree/main/apk"><code>main/apk</code></a></td></tr>
+
 <tr><td align="center"><strong>Alternative Raw URL</strong></td><td align="center"><a href="https://raw.githubusercontent.com/smsdia/Picko/main/apk/OffCourse_Picko_release.apk">Raw APK</a></td></tr>
+
 </tbody></table>
 
-> **안내:** 첨부 자료에 `main` APK 파일 링크와 `develop` APK 폴더 링크가 함께 기재되어 있습니다. 실제 파일 존재 여부와 배포 브랜치는 최종 확인이 필요합니다.
 
 <br>
 
 ---
 
-## <img src="./images/bar.svg" height="20" alt="" /> 08. Team OffCourse
-
-<div align="center">
-
-<table width="100%">
-<tr>
-<td align="center" width="25%"><a href="https://github.com/Hyeyeoniee"><img src="https://github.com/Hyeyeoniee.png" width="110" alt="신혜연 GitHub Profile" /></a><br><br><strong>신혜연</strong><br><sub><a href="https://github.com/Hyeyeoniee">@hyeyeoniee</a> · <a href="https://github.com/hyeyeonie">@hyeyeonie</a></sub><br><br><img src="https://img.shields.io/badge/PM-416DE9?style=flat-square" alt="PM" /></td>
-<td align="center" width="25%"><a href="https://github.com/jjwm10625"><img src="https://github.com/jjwm10625.png" width="110" alt="조영서 GitHub Profile" /></a><br><br><strong>조영서</strong><br><sub><a href="https://github.com/jjwm10625">@jjwm10625</a></sub><br><br><img src="https://img.shields.io/badge/PRODUCT_DESIGNER-6589E8?style=flat-square" alt="Product Designer" /></td>
-<td align="center" width="25%"><a href="https://github.com/Yamblah"><img src="https://github.com/Yamblah.png" width="110" alt="진소은 GitHub Profile" /></a><br><br><strong>진소은</strong><br><sub><a href="https://github.com/Yamblah">@yamblah</a> · <a href="https://github.com/rosejinse">@rosejinse</a></sub><br><br><img src="https://img.shields.io/badge/WEB_%2F_SERVER-416DE9?style=flat-square" alt="Web/Server Developer" /></td>
-<td align="center" width="25%"><a href="https://github.com/smsdia"><img src="https://github.com/smsdia.png" width="110" alt="손민성 GitHub Profile" /></a><br><br><strong>손민성</strong><br><sub><a href="https://github.com/smsdia">@smsdia</a> · <a href="https://github.com/sonms">@sonms</a></sub><br><br><img src="https://img.shields.io/badge/ANDROID_DEVELOPER-253858?style=flat-square" alt="Android Developer" /></td>
-</tr>
-</table>
-
-</div>
-
-<br>
-
----
-
-## <img src="./images/bar.svg" height="20" alt="" /> 09. Resources
+## <img src="./images/bar.svg" height="20" alt="" /> 08. Resources
 
 <table width="100%">
 <thead><tr><th align="center">Resource</th><th align="center">Link</th></tr></thead>
 <tbody>
-<tr><td align="center"><strong>Android Repository</strong></td><td align="center"><a href="https://github.com/smsdia/Picko">smsdia/Picko</a></td></tr>
-<tr><td align="center"><strong>Web Repository</strong></td><td align="center"><a href="https://github.com/YamBlah/Picko-web">yamblah/Picko-web</a></td></tr>
-<tr><td align="center"><strong>Server Repository</strong></td><td align="center"><a href="https://github.com/YamBlah/Picko-server">yamblah/Picko-server</a></td></tr>
-<tr><td align="center"><strong>FigJam — 아이데이션 및 서비스 기획</strong></td><td align="center"><a href="https://www.figma.com/board/mqnhf3HxdYlIIkV3a8Yidq/OT?node-id=0-1">View FigJam</a></td></tr>
+<tr><td align="center"><strong>Android Repository</strong></td><td align="center"><a href="https://github.com/smsdia/Picko">Picko</a></td></tr>
+<tr><td align="center"><strong>Web Repository</strong></td><td align="center"><a href="https://github.com/YamBlah/Picko-web">Picko-web</a></td></tr>
+<tr><td align="center"><strong>Server Repository</strong></td><td align="center"><a href="https://github.com/YamBlah/Picko-server">Picko-server</a></td></tr>
 <tr><td align="center"><strong>Figma — UI 디자인 및 프로토타입</strong></td><td align="center"><a href="https://www.figma.com/design/JPMWETJfQWTImjbH2okdNz/-현대자동차그룹--차량용-앱-개발-공모전?node-id=0-1">View Figma</a></td></tr>
 <tr><td align="center"><strong>Demo Videos</strong></td><td align="center"><a href="./preview/vehicle/vehicle_demo.mp4">Vehicle App</a> · <a href="./preview/web/web_demo.mp4">Passenger Web</a></td></tr>
 </tbody></table>
