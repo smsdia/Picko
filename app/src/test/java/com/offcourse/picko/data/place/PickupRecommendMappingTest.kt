@@ -2,7 +2,6 @@ package com.offcourse.picko.data.place
 
 import com.offcourse.picko.core.common.model.Coordinate
 import com.offcourse.picko.data.place.dto.PickupRecommendDto
-import com.offcourse.picko.data.place.model.PickupReason
 import com.offcourse.picko.data.place.repositoryimpl.toPlace
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -34,21 +33,13 @@ class PickupRecommendMappingTest {
     }
 
     @Test
-    fun `POI 후보는 이름과 좌표와 올림한 소요 시간으로 바꾼다`() {
+    fun `POI 후보는 이름과 좌표와 반올림한 거리와 올림한 소요 시간으로 바꾼다`() {
         val place = json.decodeFromString<PickupRecommendDto>(response).recommendations[0].toPlace(0)
 
         assertEquals("GS25 강남타운점", place.name)
         assertEquals(Coordinate(37.498939, 127.029887), place.coordinate)
         assertEquals(2, place.distanceKm)
         assertEquals(8, place.durationMinutes)
-        assertEquals(PickupReason.NearLandmark(category = "편의점", minutes = 3), place.reason)
-    }
-
-    @Test
-    fun `경로 위의 점은 돌아가지 않는 후보로 본다`() {
-        val place = json.decodeFromString<PickupRecommendDto>(response).recommendations[1].toPlace(1)
-
-        assertEquals(PickupReason.OnRoute(minutes = 3), place.reason)
     }
 
     @Test

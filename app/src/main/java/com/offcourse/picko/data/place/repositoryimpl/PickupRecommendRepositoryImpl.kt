@@ -3,7 +3,6 @@ package com.offcourse.picko.data.place.repositoryimpl
 import com.offcourse.picko.core.common.model.Coordinate
 import com.offcourse.picko.data.place.datasource.PickupRecommendApi
 import com.offcourse.picko.data.place.dto.PickupRecommendDto
-import com.offcourse.picko.data.place.model.PickupReason
 import com.offcourse.picko.data.place.model.PickupRecommendException
 import com.offcourse.picko.data.place.model.PlaceModel
 import com.offcourse.picko.data.place.repository.PickupRecommendRepository
@@ -16,7 +15,6 @@ import retrofit2.HttpException
 
 private const val RECOMMEND_LIMIT = 3
 private const val METERS_PER_KM = 1_000.0
-private const val SOURCE_ROUTE_SAMPLE = "route_sample"
 
 class PickupRecommendRepositoryImpl @Inject constructor(
     private val api: PickupRecommendApi,
@@ -48,19 +46,8 @@ class PickupRecommendRepositoryImpl @Inject constructor(
 internal fun PickupRecommendDto.Item.toPlace(index: Int): PlaceModel = PlaceModel(
     // 서버가 후보 ID를 주지 않아 좌표로 구분한다. 같은 지점이 두 번 오지 않으므로 목록의 키로 쓸 수 있다.
     id = "recommend-$index-$lat-$lng",
-    name = label.ifBlank { category },
+    name = label,
     coordinate = Coordinate(latitude = lat, longitude = lng),
     distanceKm = (vehicleDistanceM / METERS_PER_KM).roundToInt(),
     durationMinutes = ceil(vehicleEtaMin).toInt().coerceAtLeast(1),
-    reason = toReason(),
 )
-
-private fun PickupRecommendDto.Item.toReason(): PickupReason {
-    val walkMinutes = ceil(walkFromDestinationMin).toInt().coerceAtLeast(1)
-
-    return when {
-        source == SOURCE_ROUTE_SAMPLE -> PickupReason.OnRoute(walkMinutes)
-        category.isNotBlank() -> PickupReason.NearLandmark(category, walkMinutes)
-        else -> PickupReason.ShortWalk(walkMinutes)
-    }
-}

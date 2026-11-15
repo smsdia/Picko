@@ -51,9 +51,6 @@
     <string name="pickup_meta_distance">%1$dkm</string>
     <string name="pickup_meta_duration">%1$d분</string>
     <string name="pickup_eta_minutes">약 %1$d분</string>
-    <string name="pickup_reason_short_walk">목적지에서 걸어서 %1$d분이에요.</string>
-    <string name="pickup_reason_near_landmark">%1$s 근처라 찾기 쉽고, 목적지에서 걸어서 %2$d분이에요.</string>
-    <string name="pickup_reason_on_route">가는 길에 있어 돌아가지 않아도 돼요. 목적지에서 걸어서 %1$d분이에요.</string>
 
     <!-- 픽업 흐름: 각 단계 -->
     <string name="contact_result_title">말씀하신 연락처를 찾았어요</string>

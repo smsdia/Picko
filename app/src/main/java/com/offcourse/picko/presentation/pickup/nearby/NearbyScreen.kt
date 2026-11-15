@@ -18,11 +18,10 @@ import com.offcourse.picko.core.common.model.Coordinate
 import com.offcourse.picko.core.designsystem.component.PickoCarPreview
 import com.offcourse.picko.core.designsystem.component.button.PickoButton
 import com.offcourse.picko.core.designsystem.component.button.PickoButtonType
-import com.offcourse.picko.core.designsystem.component.card.PickoNearbyPlaceResultCard
+import com.offcourse.picko.core.designsystem.component.card.PickoPlaceResultCard
 import com.offcourse.picko.core.designsystem.component.layout.PickoScreenFrame
 import com.offcourse.picko.core.designsystem.theme.PickoTheme
 import com.offcourse.picko.data.gleo.model.PickupRequestModel
-import com.offcourse.picko.data.place.model.PickupReason
 import com.offcourse.picko.data.place.model.PlaceModel
 import com.offcourse.picko.presentation.pickup.PickupFlowState
 import com.offcourse.picko.presentation.pickup.PickupFlowViewModel
@@ -99,12 +98,11 @@ private fun NearbyScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 itemsIndexed(state.nearbyCandidates, key = { _, place -> place.id }) { index, place ->
-                    PickoNearbyPlaceResultCard(
+                    PickoPlaceResultCard(
                         order = index + 1,
                         name = place.name,
                         distanceText = stringResource(R.string.pickup_meta_distance, place.distanceKm),
                         durationText = stringResource(R.string.pickup_meta_duration, place.durationMinutes),
-                        recommendation = reasonText(place.reason),
                         isSelected = false,
                         onClick = { onPlaceClick(place) },
                     )
@@ -121,14 +119,6 @@ private fun NearbyScreen(
     }
 }
 
-@Composable
-private fun reasonText(reason: PickupReason?): String = when (reason) {
-    is PickupReason.ShortWalk -> stringResource(R.string.pickup_reason_short_walk, reason.minutes)
-    is PickupReason.NearLandmark -> stringResource(R.string.pickup_reason_near_landmark, reason.category, reason.minutes)
-    is PickupReason.OnRoute -> stringResource(R.string.pickup_reason_on_route, reason.minutes)
-    null -> ""
-}
-
 @PickoCarPreview
 @Composable
 private fun NearbyScreenPreview() {
@@ -143,7 +133,6 @@ private fun NearbyScreenPreview() {
                         coordinate = Coordinate(37.4948, 127.0632),
                         distanceKm = 18,
                         durationMinutes = 20,
-                        reason = PickupReason.ShortWalk(minutes = 1),
                     ),
                     PlaceModel(
                         id = "2",
@@ -151,7 +140,6 @@ private fun NearbyScreenPreview() {
                         coordinate = Coordinate(37.4951, 127.0578),
                         distanceKm = 18,
                         durationMinutes = 20,
-                        reason = PickupReason.NearLandmark(category = "편의점", minutes = 3),
                     ),
                 ),
             ),
