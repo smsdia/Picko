@@ -1,6 +1,5 @@
 package com.offcourse.picko.presentation.pickup.nearby
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,7 +33,7 @@ import com.offcourse.picko.presentation.pickup.component.PickupNoticeDialog
 import com.offcourse.picko.presentation.pickup.component.VoiceRetryOverlay
 import kotlinx.collections.immutable.persistentListOf
 
-/** 탑승자 위치를 반영해 추천한 안전한 정차 장소를 고르는 화면 */
+/** 서버가 목적지로 추천한 픽업 후보를 고르는 화면. 후보를 찾지 못하면 다시 말해 달라는 오버레이가 올라온다. */
 @Composable
 fun NearbyRoute(
     viewModel: PickupFlowViewModel,
@@ -50,9 +49,6 @@ fun NearbyRoute(
         onFlowFinished = onFlowFinished,
         onPickupRequested = onPickupRequested,
     )
-
-    // 탑승자의 위치를 받은 뒤라 흐름이 끝날 때까지 뒤로 갈 수 없다.
-    BackHandler(onBack = {})
 
     NearbyScreen(
         state = state,
@@ -128,8 +124,8 @@ private fun NearbyScreen(
 @Composable
 private fun reasonText(reason: PickupReason?): String = when (reason) {
     is PickupReason.ShortWalk -> stringResource(R.string.pickup_reason_short_walk, reason.minutes)
-    PickupReason.NearEntrance -> stringResource(R.string.pickup_reason_near_entrance)
-    PickupReason.EasyStop -> stringResource(R.string.pickup_reason_easy_stop)
+    is PickupReason.NearLandmark -> stringResource(R.string.pickup_reason_near_landmark, reason.category, reason.minutes)
+    is PickupReason.OnRoute -> stringResource(R.string.pickup_reason_on_route, reason.minutes)
     null -> ""
 }
 
@@ -155,7 +151,7 @@ private fun NearbyScreenPreview() {
                         coordinate = Coordinate(37.4951, 127.0578),
                         distanceKm = 18,
                         durationMinutes = 20,
-                        reason = PickupReason.NearEntrance,
+                        reason = PickupReason.NearLandmark(category = "편의점", minutes = 3),
                     ),
                 ),
             ),

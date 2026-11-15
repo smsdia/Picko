@@ -54,7 +54,7 @@ fun PickupNoticeDialog(
             onSecondary = dismiss
         }
 
-        PickupNotice.NaviRouteFailed, PickupNotice.LinkSendFailed -> {
+        PickupNotice.NaviRouteFailed, PickupNotice.LinkSendFailed, PickupNotice.RecommendFailed -> {
             onPrimary = viewModel::onNoticeRetry
             onSecondary = dismiss
         }
@@ -150,6 +150,13 @@ private fun PickupNotice.content(): NoticeContent = when (this) {
     PickupNotice.LinkSendFailed -> NoticeContent(
         title = R.string.notice_link_send_failed_title,
         description = R.string.notice_link_send_failed_description,
+        primary = R.string.notice_retry,
+        secondary = R.string.notice_close,
+    )
+
+    PickupNotice.RecommendFailed -> NoticeContent(
+        title = R.string.notice_recommend_failed_title,
+        description = R.string.notice_recommend_failed_description,
         primary = R.string.notice_retry,
         secondary = R.string.notice_close,
     )

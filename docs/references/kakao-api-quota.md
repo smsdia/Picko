@@ -38,17 +38,18 @@
 
 | 시점 | 호출 | 카카오 API | 횟수 |
 | --- | --- | --- | --- |
-| 장소 검색 (`KakaoPlaceRepository.searchPlaces`) | 키워드 검색 | 카카오맵 REST 키워드 검색 | 1 |
-| 장소 검색 | 후보별 거리·시간·통행료 | 카카오내비 REST 자동차 길찾기 | 최대 3 (후보 수) |
+| 목적지 찾기 (`KakaoPlaceRepository.findDestination`) | 키워드 검색(1순위만) | 카카오맵 REST 키워드 검색 | 1 |
 | 픽업 경로 (`KakaoRouteRepository.findPickupRoutes`) | 차량 → 픽업 지점 | 카카오내비 REST 자동차 길찾기 | 1 |
 | 지도 화면 (`RouteMap`) | 지도 표시 | 카카오맵 Android SDK | 화면을 열 때마다 |
 
 | 흐름 | 키워드 검색 | 자동차 길찾기 |
 | --- | --- | --- |
-| 장소를 말한 흐름 | 1 | 4 (3 + 1) |
-| 장소를 말하지 않은 흐름 (추천은 가짜) | 0 | 1 |
+| 장소를 말한 흐름 | 1 | 1 |
+| 장소를 말하지 않은 흐름 | 0 | 0 (다시 말해 달라고 요청하고 끝) |
 
-"다시 시도"로 장소 검색을 다시 하면 그 단계의 호출이 한 번 더 나간다. 데모 주행(`DemoVehicleRepository`, `demo.drive`를 켠 빌드)은 길찾기를 1번 부른다.
+서버 픽업 추천(`/api/pickup/recommend`)은 서버가 자기 키로 카카오를 부르므로 이 표와 앱의 쿼터 가드에 세지 않는다.
+
+"다시 시도"로 목적지 찾기를 다시 하면 그 단계의 호출이 한 번 더 나간다. 데모 주행(`DemoVehicleRepository`, `demo.drive`를 켠 빌드)은 길찾기를 1번 부른다.
 
 ## 쿼터 가드 (`core/network/quota`)
 

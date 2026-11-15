@@ -13,7 +13,6 @@ import com.offcourse.picko.data.pickuplink.dto.SessionResponseDto
 import com.offcourse.picko.data.pickuplink.model.PickoServerException
 import com.offcourse.picko.data.pickuplink.model.PickupSessionEndedException
 import com.offcourse.picko.data.pickuplink.model.SmsNotSentException
-import com.offcourse.picko.data.pickuplink.repositoryimpl.FakePickupLinkRepository
 import com.offcourse.picko.data.pickuplink.repositoryimpl.PickupLinkRepositoryImpl
 import com.offcourse.picko.data.place.model.PlaceModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +30,7 @@ class PickupLinkRepositoryImplTest {
     private val storage = FakeSessionTokenStorage()
     private val dataSource = FakeDataSource()
     private val socket = FakeSocket()
-    private val repository = PickupLinkRepositoryImpl(dataSource, storage, socket, FakePickupLinkRepository())
+    private val repository = PickupLinkRepositoryImpl(dataSource, storage, socket)
     private val contact = ContactModel(name = "홍길동", phoneNumber = "010-1234-5678")
     private val pickup = PlaceModel(
         id = "p1",
@@ -146,8 +145,6 @@ class PickupLinkRepositoryImplTest {
 
     @Test
     fun `세션이 없으면 탑승자 위치를 내보내지 않는다`() = runBlocking {
-        repository.sendLink(contact, pickup = null)
-
         assertTrue(repository.observePassengerLocation().toList().isEmpty())
     }
 
@@ -209,14 +206,6 @@ class PickupLinkRepositoryImplTest {
 
         assertEquals(1, dataSource.created.size)
         assertEquals("token-1", storage.token)
-    }
-
-    @Test
-    fun `픽업 지점이 없으면 서버를 부르지 않는다`() = runBlocking {
-        repository.sendLink(contact, pickup = null)
-
-        assertTrue(dataSource.created.isEmpty())
-        assertNull(storage.token)
     }
 
     @Test

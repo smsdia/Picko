@@ -23,6 +23,8 @@ import com.offcourse.picko.data.navi.model.NaviGuidanceResult
 import com.offcourse.picko.data.navi.repository.NaviRepository
 import com.offcourse.picko.data.place.model.PlaceModel
 import com.offcourse.picko.data.place.model.KakaoQuotaExceededException
+import com.offcourse.picko.data.place.model.PickupRecommendException
+import com.offcourse.picko.data.place.repository.PickupRecommendRepository
 import com.offcourse.picko.data.place.repository.PlaceRepository
 import com.offcourse.picko.core.common.model.distanceMetersTo
 import com.offcourse.picko.data.route.model.RouteModel
@@ -57,9 +59,8 @@ import timber.log.Timber
  * 연락처 확인부터 목적지 안내까지 한 번의 픽업 흐름이 공유하는 ViewModel.
  * 흐름의 NavGraph 항목에 묶이므로 흐름이 끝나 그래프가 pop되면 함께 사라지고, 새 요청은 새 상태로 시작한다.
  *
- * 경로는 둘이다.
- * - 장소를 말함: 연락처 확인 → 장소 확인 → 링크 발송 → 위치 공유 대기 → 픽업 지점 추천
- * - 추천을 요청함(장소 없음): 연락처 확인 → 링크 발송 → 위치 공유 대기 → 주변 장소 추천 → 픽업 지점 추천
+ * 순서: 연락처 확인 → 목적지 찾기(카카오 1순위) → 픽업 후보 추천(서버) → 후보 선택 → 링크 발송 → 위치 공유 대기 → 경로 확인.
+ * 서버가 목적지로 후보를 추천하고 그 뒤에 세션을 만들므로, 장소를 말하지 않았으면 다시 말해 달라고 요청한다.
  */
 @HiltViewModel
 class PickupFlowViewModel @Inject constructor(
@@ -67,6 +68,7 @@ class PickupFlowViewModel @Inject constructor(
     private val gleoRepository: GleoRepository,
     private val contactRepository: ContactRepository,
     private val placeRepository: PlaceRepository,
+    private val pickupRecommendRepository: PickupRecommendRepository,
     private val pickupLinkRepository: PickupLinkRepository,
     private val routeRepository: RouteRepository,
     private val naviRepository: NaviRepository,
@@ -128,11 +130,6 @@ class PickupFlowViewModel @Inject constructor(
         viewModelScope.launch { proceedAfterContact() }
     }
 
-    fun onPlaceSelected(place: PlaceModel) {
-        _state.update { it.copy(selectedPlace = place, isVoiceRetryVisible = false) }
-        navigateTo(PickupStep.Link)
-    }
-
     fun onSendLinkClicked() {
         val contact = _state.value.selectedContact ?: return
 
@@ -140,7 +137,8 @@ class PickupFlowViewModel @Inject constructor(
         linkJob = viewModelScope.launch {
             try {
                 _state.update { it.copy(linkStatus = LinkStatus.Sending) }
-                pickupLinkRepository.sendLink(contact, pickup = _state.value.selectedPlace)
+                val pickup = _state.value.selectedPlace ?: return@launch
+                pickupLinkRepository.sendLink(contact, pickup)
 
                 _state.update { it.copy(linkStatus = LinkStatus.WaitingLocation) }
                 val passenger = pickupLinkRepository.awaitPassengerLocation()
@@ -177,14 +175,8 @@ class PickupFlowViewModel @Inject constructor(
     }
 
     fun onNearbySelected(place: PlaceModel) {
-        _state.update { it.copy(selectedPlace = place) }
-
-        viewModelScope.launch {
-            // 장소를 말하지 않은 흐름은 여기서 처음 길찾기(차량 경로 1회)를 부른다.
-            if (!hasKakaoQuota(directions = PICKUP_ROUTE_DIRECTIONS_CALLS)) return@launch
-
-            prepareSpot()
-        }
+        _state.update { it.copy(selectedPlace = place, isVoiceRetryVisible = false) }
+        navigateTo(PickupStep.Link)
     }
 
     fun onStartNavigationClicked() {
@@ -252,8 +244,13 @@ class PickupFlowViewModel @Inject constructor(
         val notice = _state.value.notice
         _state.update { it.copy(notice = null) }
 
-        // 쿼터가 모자라거나 서버가 세션을 끝냈으면 이어 갈 수 없다.
-        if (notice == PickupNotice.KakaoQuotaExceeded || notice == PickupNotice.SessionEnded) finishFlow()
+        // 쿼터가 모자라거나 서버가 세션을 끝냈거나 픽업 후보를 받지 못한 채 닫으면 이어 갈 수 없다.
+        if (notice == PickupNotice.KakaoQuotaExceeded ||
+            notice == PickupNotice.SessionEnded ||
+            notice == PickupNotice.RecommendFailed
+        ) {
+            finishFlow()
+        }
     }
 
     /** 알림 대화상자의 "다시 시도"(권한을 허용한 뒤에도 쓴다). 알림이 가리키던 단계를 다시 한다. */
@@ -268,6 +265,8 @@ class PickupFlowViewModel @Inject constructor(
             PickupNotice.NaviRouteFailed -> onGuideClicked()
 
             PickupNotice.LinkSendFailed -> onSendLinkClicked()
+
+            PickupNotice.RecommendFailed -> viewModelScope.launch { proceedAfterContact() }
 
             else -> Unit
         }
@@ -375,59 +374,68 @@ class PickupFlowViewModel @Inject constructor(
         return hasRoom
     }
 
-    /** 장소를 말했는데 아직 후보를 찾지 못한 상태(차량 위치를 받지 못해 검색 전에 멈춘 경우). */
+    /** 장소를 말했는데 아직 픽업 후보를 받지 못한 상태(차량 위치를 받지 못해 검색 전에 멈춘 경우). */
     private fun isPlaceSearchPending(): Boolean {
         val state = _state.value
 
         return state.request.place != null &&
             state.selectedContact != null &&
             state.selectedPlace == null &&
-            state.placeCandidates.isEmpty()
+            state.nearbyCandidates.isEmpty()
     }
 
-    /** 연락처가 정해진 뒤: 장소를 말했으면 장소를 확인하고, 아니면 바로 링크를 보낸다. */
+    /**
+     * 연락처가 정해진 뒤: 목적지를 찾고, 서버에서 그 목적지로 가는 길의 픽업 후보를 받아 고르게 한다.
+     * 장소를 말하지 않았거나 목적지, 후보를 찾지 못했으면 다시 말해 달라고 요청한다.
+     */
     private suspend fun proceedAfterContact() {
         val place = _state.value.request.place
 
         if (place == null) {
-            navigateTo(PickupStep.Link)
+            requestVoiceRetry()
             return
         }
 
-        // 장소 검색 흐름이 부를 카카오 호출 수가 하루 한도에 남아 있는지 먼저 본다. 모자라면 아무것도 부르지 않는다.
-        if (!hasKakaoQuota(keywordSearches = 1, directions = SEARCH_FLOW_DIRECTIONS_CALLS)) return
+        // 이 흐름이 부를 카카오 호출 수가 하루 한도에 남아 있는지 먼저 본다. 모자라면 아무것도 부르지 않는다.
+        if (!hasKakaoQuota(keywordSearches = 1, directions = PICKUP_ROUTE_DIRECTIONS_CALLS)) return
 
         // 이유는 vehicleCoordinate 가 알림으로 남겼다. 알림의 "다시 시도"가 이 단계를 다시 한다.
         val vehicle = vehicleCoordinate() ?: return
-        val candidates = try {
-            placeRepository.searchPlaces(place, vehicle)
+        val destination = try {
+            placeRepository.findDestination(place, vehicle)
         } catch (e: KakaoQuotaExceededException) {
             _state.update { it.copy(notice = PickupNotice.KakaoQuotaExceeded) }
             return
         }
-
-        _state.update {
-            it.copy(
-                placeCandidates = candidates.toImmutableList(),
-                isVoiceRetryVisible = candidates.isEmpty(),
-            )
+        if (destination == null) {
+            requestVoiceRetry()
+            return
         }
-        navigateTo(PickupStep.Place)
-    }
 
-    /**
-     * 탑승자의 위치를 받은 뒤: 장소를 이미 골랐으면 추천 지점으로, 아니면 주변 장소를 추천한다.
-     * 다음 화면으로 넘어가지 못했으면 false.
-     */
-    private suspend fun proceedAfterPassengerLocation(passenger: Coordinate): Boolean {
-        if (_state.value.selectedPlace != null) return prepareSpot()
+        val candidates = try {
+            pickupRecommendRepository.recommend(vehicle, destination)
+        } catch (e: PickupRecommendException) {
+            Timber.w(e, "픽업 후보를 서버에서 받지 못했다")
+            _state.update { it.copy(notice = PickupNotice.RecommendFailed) }
+            return
+        }
+        if (candidates.isEmpty()) {
+            requestVoiceRetry()
+            return
+        }
 
-        val nearby = placeRepository.recommendNearby(passenger)
-
-        _state.update { it.copy(nearbyCandidates = nearby.toImmutableList()) }
+        _state.update { it.copy(nearbyCandidates = candidates.toImmutableList(), isVoiceRetryVisible = false) }
         navigateTo(PickupStep.Nearby)
-        return true
     }
+
+    /** 다시 말해 달라는 오버레이를 띄운다. 후보 화면 위에 올라가며, 새 요청을 읽으면 지금 흐름을 버린다. */
+    private fun requestVoiceRetry() {
+        _state.update { it.copy(nearbyCandidates = persistentListOf(), isVoiceRetryVisible = true) }
+        navigateTo(PickupStep.Nearby)
+    }
+
+    /** 탑승자의 위치를 받은 뒤: 픽업 경로를 만들고 추천 지점 화면으로 간다. 다음 화면으로 넘어가지 못했으면 false. */
+    private suspend fun proceedAfterPassengerLocation(passenger: Coordinate): Boolean = prepareSpot()
 
     /** 픽업 경로를 만들고 추천 지점 화면으로 간다. 필요한 값이 없어 가지 못했으면 false. */
     private suspend fun prepareSpot(): Boolean {
@@ -612,10 +620,7 @@ private const val VEHICLE_ETA_REFRESH_MILLIS = 10_000L
 // 차량 위치를 기다리는 상한. 위치가 1초마다 오므로 이 안에 오지 않으면 받을 수 없는 것으로 본다.
 private const val VEHICLE_LOCATION_TIMEOUT_MILLIS = 5_000L
 
-// 한 흐름이 부르는 카카오 자동차 길찾기 수(`docs/references/kakao-api-quota.md`): 장소 후보 3개 + 차량 경로 1개
-private const val SEARCH_FLOW_DIRECTIONS_CALLS = 4
-
-// 장소를 말하지 않은 흐름은 차량 경로 1개만 부른다.
+// 한 흐름이 부르는 카카오 자동차 길찾기 수(`docs/references/kakao-api-quota.md`): 차량 경로 1개
 private const val PICKUP_ROUTE_DIRECTIONS_CALLS = 1
 
 // 이보다 적게 움직인 위치 갱신은 지도에 반영하지 않는다.
