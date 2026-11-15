@@ -105,7 +105,7 @@ UseCase 조건: [domain-layer](domain-layer.md)
 
 ## 시연 차량 (`demo.drive`)
 
-에뮬레이터의 내비는 위치를 받지 않아 이동에 따른 시간 변화를 볼 수 없다([pleos-sdk-index](../references/pleos-sdk-index.md)). 시연할 때는 `demo.drive`를 켠다. `local.properties`에 `demo.drive=true`를 쓰거나 `./gradlew installDebug -Pdemo.drive=true`(release는 `assembleRelease -Pdemo.drive=true`)로 만든다. **빌드 종류와 상관없이 `BuildConfig.DEMO_DRIVE`만 본다.** 그래서 release 빌드도 켜질 수 있고, `-P`가 `local.properties`보다 먼저라서 제출·배포용 APK는 반드시 `-Pdemo.drive=false`로 만들어 시연 차량이 들어가지 않게 한다.
+에뮬레이터의 내비는 위치를 받지 않아 이동에 따른 시간 변화를 볼 수 없다([pleos-sdk-index](../references/pleos-sdk-index.md)). 시연할 때는 `demo.drive`를 켠다. `local.properties`에 `demo.drive=true`를 쓰거나 `./gradlew installDebug -Pdemo.drive=true`(release는 `assembleRelease -Pdemo.drive=true`)로 만든다. **빌드 종류와 상관없이 `BuildConfig.DEMO_DRIVE`만 본다.** 그래서 release 빌드도 켤 수 있다. 제출용 시연 APK는 `-Pdemo.drive=true`로 만들어 안내 시작 때 차량이 자동으로 달린다. 실차에서 테스트하려면 소스에서 `-Pdemo.drive=false`(또는 `local.properties`에서 `demo.drive=false`)로 다시 빌드해 시연 차량을 끈다. `-P`가 `local.properties`보다 먼저다.
 
 - `DemoVehicleRepository`(`data/vehicle`): 서울역(앱을 시작했을 때의 출발지)에 서 있다가, `내비게이션 안내 시작`을 누르면(`VehicleRepository.onNavigationStarted(destination)`) 지금 위치에서 선택한 픽업 지점까지 카카오모빌리티 자동차 경로의 좌표를 따라 40m/s로 1초마다 위치를 내보낸다(길찾기를 쓰지 못하면 두 지점을 잇는 직선). 도착하면 멈추고, 안내를 다시 시작하면 지금 위치에서 새로 출발하며, 앱을 다시 시작하면 서울역으로 돌아간다. 지도에 그린 경로선과 같은 좌표라 마커가 선 위를 간다.
 - `DemoNaviRepository`(`data/navi`): 안내를 시작하기 전에는 `previewTrip`이 null을 돌려줘 경로 화면이 카카오 경로의 실제 소요 시간(예: 28분)을 그대로 보여 준다. 안내를 시작한 뒤(`DemoVehicleRepository.isDriving`)에는 시연 차량의 현재 위치에서 픽업 지점까지 직선거리를 시연 속도(40m/s)로 나눠 올린 값을 돌려주며, 10초마다 갱신돼 줄어든다. 안내 시작과 내비 화면 띄우기는 실제 내비에 맡긴다.

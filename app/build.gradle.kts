@@ -52,7 +52,7 @@ android {
 
         buildConfigField("String", "BASE_URL", "\"${localProperty("base.url")}\"")
         buildConfigField("String", "KAKAO_NATIVE", "\"${localProperty("kakao.native.key")}\"")
-        // 시연 차량(정해 둔 좌표를 따라 이동). local.properties 의 demo.drive=true 나 -Pdemo.drive=true 로 켠다. 빌드 종류와 상관없이 이 값만 본다(-P가 local.properties보다 먼저다). 제출·배포용 빌드는 -Pdemo.drive=false 로 만든다.
+        // 시연 차량(정해 둔 좌표를 따라 이동). local.properties 의 demo.drive=true 나 -Pdemo.drive=true 로 켠다. 빌드 종류와 상관없이 이 값만 본다(-P가 local.properties보다 먼저다). 제출용 시연 APK는 -Pdemo.drive=true 로 만들고, 실차 테스트는 -Pdemo.drive=false 로 다시 빌드한다.
         val demoDrive = (findProperty("demo.drive") as String?) ?: localProperty("demo.drive")
         buildConfigField("boolean", "DEMO_DRIVE", (demoDrive == "true").toString())
         buildConfigField("String", "KAKAO_PLATFORM", "\"${localProperty("kakao.platform.key")}\"")
