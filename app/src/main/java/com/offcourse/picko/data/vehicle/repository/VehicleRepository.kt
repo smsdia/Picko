@@ -1,6 +1,7 @@
 package com.offcourse.picko.data.vehicle.repository
 
 import android.content.Context
+import com.offcourse.picko.core.common.model.Coordinate
 import com.offcourse.picko.data.vehicle.model.VehicleLocation
 import kotlinx.coroutines.flow.Flow
 
@@ -17,6 +18,6 @@ interface VehicleRepository {
      */
     fun showLocationAccessBlockedPopup(activityContext: Context) = Unit
 
-    /** 운전자가 픽업 지점으로 내비게이션 안내를 시작했다. 안내를 시작해야 움직이는 시연 차량만 쓰고, 나머지는 할 일이 없다. */
-    fun onNavigationStarted() = Unit
+    /** 운전자가 [destination](픽업 지점)으로 내비게이션 안내를 시작했다. 안내를 시작해야 움직이는 시연 차량만 쓰고, 나머지는 할 일이 없다. */
+    fun onNavigationStarted(destination: Coordinate) = Unit
 }

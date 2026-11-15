@@ -2,6 +2,7 @@ package com.offcourse.picko.data.navi.repositoryimpl
 
 import ai.pleos.playground.navi.constants.NaviErrorCode
 import ai.pleos.playground.navi.constants.RouteOption
+import ai.pleos.playground.navi.data.NavigationScreenRequest
 import ai.pleos.playground.navi.data.RouteInfo
 import ai.pleos.playground.navi.data.TripRequest
 import com.offcourse.picko.data.navi.datasource.NaviEvent
@@ -65,6 +66,13 @@ class NaviHelperRepository @Inject constructor(
 
             error.await()?.code?.toGuidanceResult() ?: NaviGuidanceResult.Requested
         }
+    }
+
+    override suspend fun showNavigationScreen(): NaviGuidanceResult {
+        val helper = connection.awaitHelper() ?: return NaviGuidanceResult.NotConnected
+
+        helper.requestNavigationScreen(NavigationScreenRequest.Foreground)
+        return NaviGuidanceResult.Requested
     }
 }
 

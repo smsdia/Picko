@@ -10,6 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,22 +22,13 @@ import kotlinx.coroutines.launch
 const val DEMO_SPEED_METERS_PER_SECOND = 40.0
 private const val DEMO_TICK_MILLIS = 1_000L
 
-// 시연 차량의 출발지(서울역)와 도착지(대치동 학원가 사거리). 이 둘의 자동차 경로 좌표를 그대로 따라간다.
+// 시연 차량이 서 있는 출발지(서울역). 앱을 시작하면 여기서 출발한다.
 private val DemoOrigin = Coordinate(37.5547, 126.9707)
-private val DemoDestination = Coordinate(37.4946, 127.0576)
-
-// 길찾기를 쓰지 못할 때 대신 따라가는 직선에 가까운 가짜 경로
-private val DemoFallbackWaypoints = listOf(
-    DemoOrigin,
-    Coordinate(37.5300, 127.0000),
-    Coordinate(37.5100, 127.0300),
-    DemoDestination,
-)
 
 /**
- * 시연용 가짜 차량. 카카오모빌리티 자동차 경로의 좌표를 일정한 속도로 따라가며 위치를 1초마다 내보낸다.
- * 길찾기를 쓰지 못하면 정해 둔 가짜 경로를 따라간다.
- * 내비게이션 안내 시작을 누르면 출발해 끝 지점에서 멈추고, 앱을 다시 시작하면 처음부터 다시 간다.
+ * 시연용 가짜 차량. 내비게이션 안내 시작을 누르면 지금 위치에서 선택한 픽업 지점까지 카카오모빌리티 자동차 경로의 좌표를
+ * 일정한 속도로 따라가며 위치를 1초마다 내보내고, 도착하면 멈춘다. 길찾기를 쓰지 못하면 두 지점을 잇는 직선을 따라간다.
+ * 안내를 다시 시작하면 지금 위치에서 새로 출발하고, 앱을 다시 시작하면 처음 출발지로 돌아간다.
  * 디버그 빌드에서 `demo.drive`가 켜졌을 때만 쓴다.
  */
 @Singleton
@@ -45,25 +37,31 @@ class DemoVehicleRepository @Inject constructor(
 ) : VehicleRepository {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val _position = MutableStateFlow(DemoOrigin)
-    private var isStarted = false
+    private var driveJob: Job? = null
 
     /** 시연 차량의 지금 위치. 시연용 내비가 남은 거리를 셀 때 쓴다. */
     val position: StateFlow<Coordinate> = _position
 
+    /** 안내 시작을 눌러 출발한 뒤인지. 시연용 내비는 출발한 뒤에만 시간을 직접 계산한다. */
+    @Volatile
+    var isDriving: Boolean = false
+        private set
+
     override fun observeLocation() = _position
         .map { VehicleLocation(it.latitude, it.longitude, accuracyMeters = 5f, timestampMillis = System.currentTimeMillis()) }
 
-    /** 안내 시작을 누르면 출발한다. 그 전에는 출발지에 서 있다. */
-    override fun onNavigationStarted() = start()
+    /** 안내 시작을 누르면 [destination]으로 출발한다. 그 전에는 서 있다. */
+    override fun onNavigationStarted(destination: Coordinate) = start(destination)
 
     @Synchronized
-    private fun start() {
-        if (isStarted) return
-        isStarted = true
+    private fun start(destination: Coordinate) {
+        driveJob?.cancel()
+        isDriving = true
+        val origin = _position.value
 
-        scope.launch {
-            val route = directions.findCarRoute(DemoOrigin, DemoDestination)?.toRouteModel()?.points
-            val path = buildDemoPath(route ?: DemoFallbackWaypoints, stepMeters = DEMO_SPEED_METERS_PER_SECOND * DEMO_TICK_MILLIS / 1_000)
+        driveJob = scope.launch {
+            val route = directions.findCarRoute(origin, destination)?.toRouteModel()?.points
+            val path = buildDemoPath(route ?: listOf(origin, destination), stepMeters = DEMO_SPEED_METERS_PER_SECOND * DEMO_TICK_MILLIS / 1_000)
 
             path.forEach { point ->
                 _position.value = point

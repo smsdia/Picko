@@ -1,5 +1,6 @@
 package com.offcourse.picko.presentation.pickup.spot
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,9 @@ fun SpotRoute(
         onFlowFinished = onFlowFinished,
         onPickupRequested = onPickupRequested,
     )
+
+    // 탑승자의 위치를 받은 뒤라 흐름이 끝날 때까지 뒤로 갈 수 없다.
+    BackHandler(onBack = {})
 
     SpotScreen(
         state = state,

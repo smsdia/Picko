@@ -17,4 +17,10 @@ interface NaviRepository {
      * `requestRoute` 성공은 탐색 완료가 아니고 오류는 뒤늦게 이벤트로 오므로, 요청 뒤 잠시 기다려 온 오류를 결과로 돌려준다.
      */
     suspend fun startGuidance(destination: NaviDestinationModel): NaviGuidanceResult
+
+    /**
+     * 목적지 없이 차량 내비 화면만 앞으로 띄운다(`requestNavigationScreen(Foreground)`). 내비 앱이 앱 영역에 올라와 우리 앱이 가려진다.
+     * 내비에 연결하지 못했으면 [NaviGuidanceResult.NotConnected]를 돌려준다.
+     */
+    suspend fun showNavigationScreen(): NaviGuidanceResult
 }
