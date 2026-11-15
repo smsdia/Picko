@@ -4,8 +4,6 @@
 
 <img src="./images/picko_thumbnail.png" alt="PICKO Thumbnail" />
 
-<img src="./images/picko_logo.png" width="220" alt="PICKO Logo" />
-
 <br><br>
 
 ### “어디야?” 대신 “픽코 불러줘!”
@@ -46,6 +44,9 @@ PICKO(픽코)는 차량 내 음성 호출로 픽업 장소를 추천하고, 모�
 운전자와 탑승자를 연결하여 더욱 안전하고 편리한 만남을 지원합니다.
 
 <br>
+
+<img src="./images/picko_intro.png" alt="PICKO Thumbnail" />
+
 
 ---
 
@@ -231,23 +232,14 @@ Pleos STT·TTS는 온디바이스 모드로 사용하므로 Pleos 클라이언�
 <tr><td align="center"><strong>OS</strong></td><td align="center">macOS / Linux 검증, Windows는 <code>gradlew.bat</code> 사용</td></tr>
 </tbody></table>
 
-#### Run
+#### Configuration
 
-- **Production:** https://picko.up.railway.app
-- **Swagger:** https://picko.up.railway.app/swagger
-- **Local:** 저장소 루트에서 아래 명령어 실행 후 `http://localhost:5173` 접속
-
-```bash
-./gradlew bootRun
-```
-
-`application.yml` 설정은 환경변수로 재정의할 수 있습니다. 로컬에서는 셸의 `export` 또는 `.env`를 사용합니다. 키가 없으면 일부 기능이 데모 키 또는 SMS Mock 모드로 동작합니다.
+`application.yml` 설정은 환경변수로 재정의할 수 있습니다. 키가 없으면 일부 기능이 데모 키 또는 SMS Mock 모드로 동작합니다.
 
 <table width="100%">
 <thead><tr><th align="center">Variable</th><th align="center">Required</th><th align="center">Purpose / Behavior</th></tr></thead>
 <tbody>
 <tr><td align="center"><code>KAKAO_REST_API_KEY</code></td><td align="center">◯</td><td align="center">Kakao Directions / Local POI. 미설정 시 공유 데모 키 fallback</td></tr>
-<tr><td align="center"><code>APP_WEB_BASE_URL</code></td><td align="center">◯</td><td align="center">SMS 링크 베이스 URL. 로컬 <code>http://localhost:5173</code>, 배포 <code>https://picko.up.railway.app</code></td></tr>
 <tr><td align="center"><code>SOLAPI_API_KEY</code></td><td align="center">△</td><td align="center">SMS 발송. 미설정 시 Mock 모드 (실제 발송 없음)</td></tr>
 <tr><td align="center"><code>SOLAPI_API_SECRET</code></td><td align="center">△</td><td align="center">SOLAPI 인증 시크릿. 미설정 시 Mock 모드</td></tr>
 <tr><td align="center"><code>SOLAPI_SENDER_PHONE</code></td><td align="center">△</td><td align="center">SOLAPI 콘솔에 등록된 발신 번호</td></tr>
@@ -264,17 +256,13 @@ Pleos STT·TTS는 온디바이스 모드로 사용하므로 Pleos 클라이언�
 - 외부 의존성: Kakao Maps JavaScript SDK, Pretendard (jsDelivr CDN)
 - 대상 브라우저: 모바일 Safari / Chrome
 
-#### Run
+#### Access
 
-- **Production:** https://picko.up.railway.app
+- SMS로 받은 링크를 열면 웹에 접속됩니다.
 - 배포 시 웹 정적 파일 사본은 `picko-server/src/main/resources/static/`에서 제공됩니다.
-- 로컬 레이아웃 미리보기:
 
-```bash
-python3 -m http.server 5173
-```
-
-실제 세션·지도·WebSocket 기능은 서버와 함께 실행하고, 서버가 발급한 매직 링크(`?t=TOKEN`)로 접근해야 합니다.
+> **접속 시 유의사항**  
+> 링크는 발급될 때마다 새로 만들어지며, 링크 하나에는 한 명의 사용자만 접근할 수 있습니다. 사용자는 브라우저 쿠키로 식별되므로, 링크를 처음 연 브라우저가 아닌 다른 브라우저나 기기에서 같은 링크를 열면 접근할 수 없습니다.
 
 #### Configuration
 
@@ -343,11 +331,7 @@ python3 -m http.server 5173
 <tr><td align="center"><strong>Port</strong></td><td align="center">기본 <code>5173</code>, 환경변수 <code>PORT</code>로 변경 가능</td></tr>
 </tbody></table>
 
-- 프로덕션 서버: https://picko.up.railway.app
-- Swagger UI: https://picko.up.railway.app/swagger
-- 로컬 실행: `./gradlew bootRun` → `http://localhost:5173`
 - H2 인메모리 세션 저장소는 서버 재시작 시 세션과 토큰이 초기화됩니다.
-- Docker에서는 저장소 루트의 `Dockerfile`로 이미지를 빌드하고 호스트 포트 `5173`을 컨테이너 포트 `5173`에 매핑합니다.
 - 필수 환경변수 및 API 키 설정은 **05. Getting Started → Server**의 표를 참조합니다.
 
 ### Passenger Web
@@ -362,10 +346,9 @@ python3 -m http.server 5173
 <tr><td align="center"><strong>Deployment</strong></td><td align="center">서버의 <code>src/main/resources/static/</code>에서 제공</td></tr>
 </tbody></table>
 
-- 프로덕션: https://picko.up.railway.app
+- SMS로 받은 링크를 열면 웹에 접속됩니다.
 - 세션 토큰 없이 접근하면 **링크 만료** 화면이 표시됩니다.
-- 레이아웃 미리보기: `python3 -m http.server 5173` → `http://localhost:5173`
-- 실제 세션·지도·WebSocket 테스트에는 서버 실행 및 `?t=TOKEN` 매직 링크가 필요합니다.
+- 링크 하나에는 한 명의 사용자만 접근할 수 있습니다. 사용자는 브라우저 쿠키로 식별되므로, 링크를 처음 연 브라우저가 아닌 다른 브라우저나 기기에서는 접근할 수 없습니다.
 - Kakao Maps JS 키, OG 이미지 URL, 서버 엔드포인트 설정은 **05. Getting Started → Passenger Web**의 표를 참조합니다.
 
 <br>
@@ -435,7 +418,6 @@ python3 -m http.server 5173
 <tbody>
 <tr><td align="center"><strong>Android Repository</strong></td><td align="center"><a href="https://github.com/smsdia/Picko">smsdia/Picko</a></td></tr>
 <tr><td align="center"><strong>Production Web</strong></td><td align="center"><a href="https://picko.up.railway.app">PICKO Web</a></td></tr>
-<tr><td align="center"><strong>Swagger</strong></td><td align="center"><a href="https://picko.up.railway.app/swagger">Server API Documentation</a></td></tr>
 <tr><td align="center"><strong>FigJam — 아이데이션 및 서비스 기획</strong></td><td align="center"><a href="https://www.figma.com/board/mqnhf3HxdYlIIkV3a8Yidq/OT?node-id=0-1">View FigJam</a></td></tr>
 <tr><td align="center"><strong>Figma — UI 디자인 및 프로토타입</strong></td><td align="center"><a href="https://www.figma.com/design/JPMWETJfQWTImjbH2okdNz/-현대자동차그룹--차량용-앱-개발-공모전?node-id=0-1">View Figma</a></td></tr>
 <tr><td align="center"><strong>Demo Videos</strong></td><td align="center"><a href="./preview/vehicle/vehicle_demo.mp4">Vehicle App</a> · <a href="./preview/web/web_demo.mp4">Passenger Web</a></td></tr>
