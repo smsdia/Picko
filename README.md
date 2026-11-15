@@ -8,7 +8,7 @@
 
 ### “어디야?” 대신 “픽코 불러줘!”
 
-**운전자와 탑승자를 이어주는 차량 속 픽업 에이전트**
+**운전자와 탑승자가 가장 안전하게 만날 장소를 설계하는 차량 속 AI 픽업 에이전트**
 
 <br>
 
@@ -26,9 +26,6 @@
 
 </div>
 
----
-
-<br>
 
 ---
 
@@ -39,9 +36,9 @@
 
 > **PICKO — “어디야?” 대신 “픽코 불러줘!”**
 
-PICKO(픽코)는 차량 내 음성 호출로 픽업 장소를 추천하고, 모바일 웹을 통해 차량 위치와 도착 상황을 실시간으로 공유하는 **차량 특화 픽업 에이전트**입니다.
+PICKO(픽코)는 차량 내 음성 호출로 픽업 장소를 추천하고, 모바일 웹을 통해 차량 위치와 도착 상황을 실시간으로 공유하는 **차량 특화 AI 픽업 에이전트**입니다.
 
-운전자와 탑승자를 연결하여 더욱 안전하고 편리한 만남을 지원합니다.
+운전자와 탑승자를 연결하여 더욱 안전하고 정확한 만남을 지원합니다.
 
 <br>
 
@@ -278,8 +275,6 @@ Pleos STT·TTS는 온디바이스 모드로 사용하므로 Pleos 클라이언�
 
 ---
 
----
-
 ## <img src="./images/bar.svg" height="20" alt="" /> 06. Test Environment
 
 ### Android / Vehicle App
@@ -355,8 +350,6 @@ Pleos STT·TTS는 온디바이스 모드로 사용하므로 Pleos 클라이언�
 
 ---
 
----
-
 ## <img src="./images/bar.svg" height="20" alt="" /> 07. APK & Release
 
 <div align="center">
@@ -390,8 +383,6 @@ Pleos STT·TTS는 온디바이스 모드로 사용하므로 Pleos 클라이언�
 
 ---
 
----
-
 ## <img src="./images/bar.svg" height="20" alt="" /> 08. Team OffCourse
 
 <div align="center">
@@ -417,7 +408,8 @@ Pleos STT·TTS는 온디바이스 모드로 사용하므로 Pleos 클라이언�
 <thead><tr><th align="center">Resource</th><th align="center">Link</th></tr></thead>
 <tbody>
 <tr><td align="center"><strong>Android Repository</strong></td><td align="center"><a href="https://github.com/smsdia/Picko">smsdia/Picko</a></td></tr>
-<tr><td align="center"><strong>Production Web</strong></td><td align="center"><a href="https://picko.up.railway.app">PICKO Web</a></td></tr>
+<tr><td align="center"><strong>Web Repository</strong></td><td align="center"><a href="https://github.com/YamBlah/Picko-web">yamblah/Picko-web</a></td></tr>
+<tr><td align="center"><strong>Server Repository</strong></td><td align="center"><a href="https://github.com/YamBlah/Picko-server">yamblah/Picko-server</a></td></tr>
 <tr><td align="center"><strong>FigJam — 아이데이션 및 서비스 기획</strong></td><td align="center"><a href="https://www.figma.com/board/mqnhf3HxdYlIIkV3a8Yidq/OT?node-id=0-1">View FigJam</a></td></tr>
 <tr><td align="center"><strong>Figma — UI 디자인 및 프로토타입</strong></td><td align="center"><a href="https://www.figma.com/design/JPMWETJfQWTImjbH2okdNz/-현대자동차그룹--차량용-앱-개발-공모전?node-id=0-1">View Figma</a></td></tr>
 <tr><td align="center"><strong>Demo Videos</strong></td><td align="center"><a href="./preview/vehicle/vehicle_demo.mp4">Vehicle App</a> · <a href="./preview/web/web_demo.mp4">Passenger Web</a></td></tr>
