@@ -20,6 +20,20 @@ val localProperties = Properties().apply {
 fun localProperty(key: String): String =
     localProperties.getProperty(key).orEmpty().trim().removeSurrounding("\"")
 
+// release 서명 정보. `-P`(CI 등)가 local.properties 보다 먼저다. 키스토어와 비밀번호는 저장소에 올리지 않는다.
+//   release.store.file(선택, 기본 keystore/picko_release_key.jks), release.store.password, release.key.alias, release.key.password
+fun releaseSigningProperty(key: String): String =
+    (findProperty(key) as String?)?.trim().orEmpty().ifEmpty { localProperty(key) }
+
+val releaseKeystoreFile: File = rootProject.file(
+    releaseSigningProperty("release.store.file").ifEmpty { "keystore/picko_release_key.jks" },
+)
+
+// 키스토어 파일과 값이 모두 있을 때만 서명한다. 없으면 서명되지 않은 release APK가 만들어지고 빌드는 통과한다.
+val hasReleaseSigning: Boolean = releaseKeystoreFile.exists() &&
+    listOf("release.store.password", "release.key.alias", "release.key.password")
+        .all { releaseSigningProperty(it).isNotEmpty() }
+
 android {
     namespace = "com.offcourse.picko"
     compileSdk {
@@ -36,14 +50,28 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "PLEOS_CLIENT_ID", "\"${localProperty("pleos.client.id")}\"")
-        buildConfigField("String", "PLEOS_CLIENT_SECRET", "\"${localProperty("pleos.client.secret")}\"")
+        buildConfigField("String", "BASE_URL", "\"${localProperty("base.url")}\"")
         buildConfigField("String", "KAKAO_NATIVE", "\"${localProperty("kakao.native.key")}\"")
-
+        // 시연 차량(정해 둔 좌표를 따라 이동). local.properties 의 demo.drive=true 나 -Pdemo.drive=true 로 켠다. 빌드 종류와 상관없이 이 값만 본다(-P가 local.properties보다 먼저다). 제출용 시연 APK는 -Pdemo.drive=true 로 만들고, 실차 테스트는 -Pdemo.drive=false 로 다시 빌드한다.
+        val demoDrive = (findProperty("demo.drive") as String?) ?: localProperty("demo.drive")
+        buildConfigField("boolean", "DEMO_DRIVE", (demoDrive == "true").toString())
+        buildConfigField("String", "KAKAO_PLATFORM", "\"${localProperty("kakao.platform.key")}\"")
+    }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = releaseKeystoreFile
+                storePassword = releaseSigningProperty("release.store.password")
+                keyAlias = releaseSigningProperty("release.key.alias")
+                keyPassword = releaseSigningProperty("release.key.password")
+            }
+        }
     }
 
     buildTypes {
         release {
+            if (hasReleaseSigning) signingConfig = signingConfigs.getByName("release")
+
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
@@ -69,8 +97,15 @@ dependencies {
     implementation(libs.bundles.hilt)
     ksp(libs.hilt.compiler)
 
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.bundles.okhttp)
+    implementation(libs.bundles.retrofit)
+
     implementation(libs.timber)
     implementation(libs.pleos.fused.location)
+    implementation(libs.pleos.speech.to.text)
+    implementation(libs.pleos.text.to.speech)
+    implementation(libs.pleos.navi.helper)
     implementation(libs.kakao.maps)
 
     testImplementation(libs.bundles.unitTest)

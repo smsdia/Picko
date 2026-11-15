@@ -1,0 +1,4 @@
+# 같은 사람이 쓰는 GitHub 계정/이메일을 하나로 합쳐 보여 준다. (형식: 표시할 이름 <표시할 이메일> 커밋 때 이름 <커밋 때 이메일>)
+# sonms와 smsdia는 동일 인물이다.
+smsdia <smsdia412@gmail.com> sonms <smsms5676@naver.com>
+smsdia <smsdia412@gmail.com> sonms <71806591+sonms@users.noreply.github.com>

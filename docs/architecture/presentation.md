@@ -6,7 +6,7 @@ MVVM의 단일 소스(ViewModel)와 MVI의 단방향 흐름을 합친 방식이�
 
 | 구성 | 가시성 | 책임 |
 | --- | --- | --- |
-| `XxxRoute` | `internal` | `hiltViewModel()`로 ViewModel을 얻고, State와 SideEffect를 수집하고, 네비게이션 람다를 연결한다. 어디로 이동할지는 `XxxNavigation.kt`가 정한다 |
+| `XxxRoute` | 기본(public) | `hiltViewModel()`로 ViewModel을 얻고, State와 SideEffect를 수집하고, 네비게이션 람다를 연결한다. 어디로 이동할지는 `XxxNavigation.kt`가 정한다 |
 | `XxxScreen` | `private` | `state`와 람다만 받는 순수 UI. ViewModel을 받지 않아서 Preview와 테스트에 ViewModel이 필요 없다 |
 
 - 모든 `XxxScreen`에 `@Preview`를 두고 `PickoTheme`로 감싼다. 하위 `component/`의 Preview는 필수가 아니다.
@@ -17,6 +17,28 @@ MVVM의 단일 소스(ViewModel)와 MVI의 단방향 흐름을 합친 방식이�
 | `private fun PickupScreen(viewModel: PickupViewModel)` | `private fun PickupScreen(state: PickupState, onRetry: () -> Unit)` |
 | Screen이나 ViewModel이 `NavController`를 앎 | Route가 받은 람다로만 이동 |
 | Route와 Screen이 Flow를 직접 구독 | ViewModel이 `combine` 등으로 하나의 State로 합침 |
+
+## 흐름 범위 ViewModel
+
+여러 화면이 한 흐름의 상태를 공유하면(연락처 확인부터 목적지 안내까지) 화면마다 ViewModel을 두지 않고, **중첩 NavGraph 항목에 묶은 ViewModel 하나**를 쓴다. 싱글톤 Repository에 상태를 두지 않는다.
+
+| 규칙 | 내용 |
+| --- | --- |
+| 범위 | `navigation<XxxFlowDestination>(...)` 그래프 항목. 흐름이 끝나 그래프가 pop되면 ViewModel도 사라지고, 새 흐름은 새 상태로 시작한다 |
+| 얻는 곳 | NavGraph 쪽에서 `hiltViewModel(getBackStackEntry<XxxFlowDestination>())`로 구해 각 Route에 넘긴다. Route 아래로는 `NavController`를 내려보내지 않는다 |
+| 인자 | 그래프 라우트의 인자로 받고 ViewModel에서 `SavedStateHandle.toRoute<XxxFlowDestination>()`로 읽는다 |
+| 이동 | `XxxSideEffect.NavigateTo(step)`으로 보낸다. Route는 화면이 `RESUMED`일 때만 수집해서, 전환 중인 이전 화면이 이벤트를 가로채지 않게 한다 |
+| 새 요청 | 호출하는 쪽이 `popUpTo<XxxFlowDestination> { inclusive = true }`로 이전 흐름을 pop하고 시작한다 |
+| 화면별 파일 | 화면마다 `XxxRoute`(public)와 `private XxxScreen`을 둔다. ViewModel과 Contract는 흐름 패키지에 하나씩 둔다 |
+
+```kotlin
+@Composable
+private fun NavController.pickupFlowViewModel(entry: NavBackStackEntry): PickupFlowViewModel {
+    val flowEntry = remember(entry) { getBackStackEntry<PickupFlowDestination>() }
+
+    return hiltViewModel(flowEntry)
+}
+```
 
 ## Contract 파일
 

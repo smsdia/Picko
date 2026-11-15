@@ -18,6 +18,24 @@
 | `object SpotPolicy`, `Util`, `Helper` | 동작 이름의 `XxxUseCase` 클래스 |
 | UseCase가 UI 타입이나 문자열을 반환 | 도메인 값을 반환하고 ViewModel에서 변환 |
 
-저장소에 UseCase가 생기면 이 문서에 실제 코드 예시를 추가한다.
+## 예시
+
+`ListenForPickupUseCase`는 두 Repository를 조합한다. 음성 인식(`SpeechRecognitionRepository`)으로 요청을 읽고, 탑승자 연락처가 있는지(`ContactRepository`) 확인한다. 홈과 재요청 오버레이가 같은 정책(연락처가 없으면 흐름을 시작하지 않고 듣던 화면에 머문다)을 쓴다.
+
+```kotlin
+class ListenForPickupUseCase @Inject constructor(
+    private val speechRecognitionRepository: SpeechRecognitionRepository,
+    private val contactRepository: ContactRepository,
+) {
+    operator fun invoke(): Flow<PickupListenEvent> = speechRecognitionRepository.listen().map { event ->
+        when (event) {
+            is SpeechRecognitionEvent.Understood -> checkContact(event.request)
+            // ...
+        }
+    }
+}
+```
+
+위치는 `domain/pickup/usecase/`이고 반환 타입 `PickupListenEvent`는 `domain/pickup/model/`에 둔다.
 
 계층 구조와 의존성 방향: [data-layer](data-layer.md)

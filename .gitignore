@@ -185,3 +185,10 @@ GoogleService-Info.plist
 secrets.properties
 
 experiments
+
+# Android Studio의 "서명된 APK 만들기" 결과(APK, mapping, 디버그 심볼). 제출용 APK는 아래 apk/ 폴더에만 둔다.
+/app/release/
+
+# 제출용 release APK만 추적한다(위의 *.apk 무시 규칙보다 뒤에 있어야 한다). 파일명: 팀명_앱이름_release.apk
+!/apk/
+!/apk/*_release.apk

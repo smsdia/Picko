@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 실험 화면의 내비 화면 요청(requestNavigationScreen) -->
+    <uses-permission android:name="pleos.car.permission.NAVI_CUSTOM_MAP" />
+
+    <application>
+        <!-- NaviHelper 동작을 눈으로 확인하는 디버그 전용 화면. 별도 런처 아이콘으로 뜬다. -->
+        <activity
+            android:name="com.offcourse.picko.debug.navi.NaviExperimentActivity"
+            android:exported="true"
+            android:label="Navi 실험"
+            android:theme="@style/Theme.Picko">
+            <meta-data
+                android:name="distractionOptimized"
+                android:value="true" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 주야간·조도 신호 확인용 디버그 전용 화면. uiMode 변경을 재생성 없이 받는다. -->
+        <activity
+            android:name="com.offcourse.picko.debug.light.LightExperimentActivity"
+            android:configChanges="uiMode"
+            android:exported="true"
+            android:label="조도 실험"
+            android:theme="@style/Theme.Picko">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
