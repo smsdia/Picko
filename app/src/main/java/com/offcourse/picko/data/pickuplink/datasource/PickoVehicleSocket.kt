@@ -1,7 +1,7 @@
 package com.offcourse.picko.data.pickuplink.datasource
 
 import com.offcourse.picko.core.common.model.Coordinate
-import com.offcourse.picko.core.network.PICKO_SERVER_URL
+import com.offcourse.picko.core.network.PickoServerUrl
 import com.offcourse.picko.core.network.di.PickoSocket
 import com.offcourse.picko.data.pickuplink.dto.PickoSocketMessage
 import com.offcourse.picko.data.pickuplink.dto.parsePickoSocketMessage
@@ -101,7 +101,7 @@ class PickoVehicleSocket @Inject constructor(
     private fun openLocked() {
         val currentToken = token ?: return
         // 토큰은 주소의 쿼리에만 싣는다. 이 클라이언트는 요청 로그를 남기지 않는다.
-        val url = (PICKO_SERVER_URL + SOCKET_PATH).toHttpUrl()
+        val url = (PickoServerUrl + SOCKET_PATH).toHttpUrl()
             .newBuilder()
             .addQueryParameter("token", currentToken)
             .build()

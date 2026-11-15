@@ -1,7 +1,7 @@
 package com.offcourse.picko.core.network.di
 
 import com.offcourse.picko.BuildConfig
-import com.offcourse.picko.core.network.PICKO_SERVER_URL
+import com.offcourse.picko.core.network.PickoServerUrl
 import com.offcourse.picko.core.network.auth.KakaoAuthInterceptor
 import dagger.Module
 import dagger.Provides
@@ -55,7 +55,7 @@ object NetworkModule {
     @Singleton
     @PickoServer
     fun providePickoRetrofit(client: OkHttpClient, json: Json): Retrofit =
-        retrofit(baseUrl = PICKO_SERVER_URL, client = client, json = json)
+        retrofit(baseUrl = PickoServerUrl, client = client, json = json)
 
     @Provides
     @Singleton

@@ -72,7 +72,7 @@ OkHttp 5.5.0, Retrofit 3.0.0, kotlinx.serialization 컨버터를 쓴다. 호스�
 
 | 한정자 | 호스트 | 쓰는 곳 |
 | --- | --- | --- |
-| `@PickoServer` | `<서버 주소>/` | `data/pickuplink`의 `PickoSessionApi` |
+| `@PickoServer` | `BuildConfig.BASE_URL`(`local.properties`의 `base.url`, 끝의 `/`는 자동으로 붙인다). 비어 있으면 서버 연결 시 오류 | `data/pickuplink`의 `PickoSessionApi`, `PickoVehicleSocket` |
 | `@KakaoMobility` | `https://apis-navi.kakaomobility.com/` | `data/route`의 `KakaoDirectionsApi` |
 | `@KakaoLocal` | `https://dapi.kakao.com/` | `data/place`의 `KakaoLocalApi` |
 

@@ -2,7 +2,7 @@ package com.offcourse.picko.core.network.di
 
 import javax.inject.Qualifier
 
-/** Picko 서버(`<서버 주소>`)로 가는 Retrofit */
+/** Picko 서버(`BuildConfig.BASE_URL`)로 가는 Retrofit */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class PickoServer

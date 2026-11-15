@@ -4,6 +4,8 @@
 
 ## REST (`core/network`의 `@PickoServer`)
 
+서버 주소는 `local.properties`의 `base.url`로 둔다(`BuildConfig.BASE_URL`). 이 문서의 서버 주소는 `<서버 주소>`로 적는다.
+
 | 호출 | 용도 | 앱에서 |
 | --- | --- | --- |
 | `POST /api/sessions` | 세션 생성. 응답의 `token`이 세션 토큰이고, 요청에 `passengerPhone`이 있으면 서버가 문자를 보낸다(`smsSent`, `smsDetail`) | `PickupLinkRepositoryImpl.sendLink` |
