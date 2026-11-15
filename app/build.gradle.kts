@@ -36,6 +36,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        buildConfigField("String", "BASE_URL", "\"${localProperty("base.url")}\"")
         buildConfigField("String", "KAKAO_NATIVE", "\"${localProperty("kakao.native.key")}\"")
         // 시연 차량(정해 둔 좌표를 따라 이동). local.properties 의 demo.drive=true 나 -Pdemo.drive=true 로 켠다. 디버그 빌드에서만 쓰인다.
         val demoDrive = (findProperty("demo.drive") as String?) ?: localProperty("demo.drive")
@@ -69,6 +70,10 @@ dependencies {
     implementation(libs.bundles.kotlin)
     implementation(libs.bundles.hilt)
     ksp(libs.hilt.compiler)
+
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.bundles.okhttp)
+    implementation(libs.bundles.retrofit)
 
     implementation(libs.timber)
     implementation(libs.pleos.fused.location)

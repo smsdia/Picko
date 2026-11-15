@@ -1,12 +1,16 @@
 package com.offcourse.picko.data.route.di
 
+import com.offcourse.picko.core.network.di.KakaoMobility
+import com.offcourse.picko.data.route.datasource.KakaoDirectionsApi
 import com.offcourse.picko.data.route.repository.RouteRepository
 import com.offcourse.picko.data.route.repositoryimpl.KakaoRouteRepository
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import retrofit2.Retrofit
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -15,4 +19,11 @@ abstract class RouteRepositoryModule {
     @Binds
     @Singleton
     abstract fun bindRouteRepository(impl: KakaoRouteRepository): RouteRepository
+
+    companion object {
+        @Provides
+        @Singleton
+        fun provideKakaoDirectionsApi(@KakaoMobility retrofit: Retrofit): KakaoDirectionsApi =
+            retrofit.create(KakaoDirectionsApi::class.java)
+    }
 }
