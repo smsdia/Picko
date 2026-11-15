@@ -48,12 +48,10 @@ fun PickupMap(
     val pickupTitle = stringResource(R.string.marker_pickup_title)
     val pickupDescription = stringResource(R.string.marker_pickup_description, routes.passengerWalk.durationMinutes)
 
-    // TODO: 탑승자 도보 경로선과 "도보 약 N분"을 어떻게 할지 정해지지 않았다. 도보 길찾기가 제휴 전용이라 지금은 가짜 값이다.
-    //  (1) 경로선은 빼고 탑승자 마커만 두고 도보 시간은 직선거리로 추정할지, (2) 도보 시간 숫자도 없앨지 정한다.
+    // 도보 길찾기가 제휴 전용이라 탑승자의 도보 경로선은 그리지 않고 마커만 둔다. "도보 약 N분"은 직선거리 ÷ 보행 속도로 추정한 값이다.
     RouteMap(
         routes = listOf(
             MapRouteLine(points = routes.vehicle.points, color = colors.accent, progressFrom = vehiclePosition),
-            MapRouteLine(points = routes.passengerWalk.points, color = colors.accentBright),
         ),
         // 라벨 자리가 모자라면 픽업 지점, 차량, 탑승자 순으로 먼저 얻는다.
         markers = listOf(

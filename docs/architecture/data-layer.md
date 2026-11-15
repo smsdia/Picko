@@ -4,7 +4,7 @@ Google 권장 아키텍처를 따른다. 단일 `app` 모듈이며 모듈 분리
 
 ```
 com.offcourse.picko
-├── core/            designsystem, localstorage, network, navigation, common
+├── core/            designsystem, crypto, localstorage, network, navigation, common
 ├── data/<기능>/      repository(인터페이스), repositoryimpl, model, dto(외부 입출력 JSON), datasource, di
 │   └── vehicle/     Pleos SDK 연동
 ├── domain/<기능>/    model, usecase (필요한 기능에만)
@@ -61,10 +61,27 @@ abstract fun bindVehicleRepository(impl: FakeVehicleRepository): VehicleReposito
 | `gleo` | Gleo 요청 파싱과 콜백 | 실제 (`GleoRepositoryImpl`) |
 | `speech` | 말로 하는 픽업 요청 듣기(STT)와 문장 해석, 안내 문구 읽기(TTS) | 실제 (`SpeechRecognitionRepositoryImpl`·`PleosSpeechTextSource`, `PleosSpeechSynthesisRepository`). STT와 TTS 모두 온디바이스(`Mode.ON_DEVICE`)라 앱 등록과 클라이언트 ID/시크릿이 필요 없다. STT는 에뮬레이터에서 `ON_DEVICE`로 연결되고 한국어(`ko_KR`)로 오디오를 처리하는 것까지 확인했고, 실제 발화 인식 품질은 확인 전이다 |
 | `vehicle` | 차량 위치 | 실제 (`FusedLocationVehicleRepository`). 위치를 받지 못하면 이유(권한 거부, 미지원, 받지 못함)를 `VehicleLocationException`으로 전달하고 화면이 알림 대화상자로 안내한다. 값도 오류도 없는 경우가 있어 호출하는 쪽(`PickupFlowViewModel`)이 5초 상한을 두고 "받지 못함"으로 본다. `showLocationAccessBlockedPopup`은 사용자가 대화상자의 `개인정보 설정 확인`을 눌렀을 때만 연다. SDK 가 없는 환경에서는 `FakeVehicleRepository`로 바인딩을 바꾼다 |
-| `place` | 장소 검색, 주변 안전 정차 장소 추천 | 가짜 (`FakePlaceRepository`) |
-| `pickuplink` | 위치 공유 링크 전송, 탑승자 위치 대기, 취소 알림 | 가짜 (`FakePickupLinkRepository`) |
-| `route` | 지도에 그릴 차량·도보 경로와 목적지 경로 | 차량 경로는 실제 (`KakaoRouteRepository`, 카카오모빌리티 자동차 길찾기). 도보와 목적지 경로는 가짜 (`FakeRouteRepository`), 호출이 실패해도 차량 경로를 가짜로 대신한다 |
-| `navi` | 차량 내비(NaviHelper)에 소요 시간 묻기(`requestTrip`)와 안내 시작(`requestRoute`) | 실제 (`NaviHelperRepository`, 연결은 `NaviHelperConnection`). 경로 좌표는 받을 수 없어 지도 선은 `route`가 맡는다. 픽업 경로의 차량 소요 시간만 `FindPickupRoutesUseCase`가 내비 값으로 바꾼다. 안내를 시작한 뒤에는 내비가 맡고 앱은 흐름을 끝낸다 |
+| `place` | 장소 검색, 주변 안전 정차 장소 추천 | 장소 검색은 실제 (`KakaoPlaceRepository`): 카카오 로컬 키워드 검색으로 후보 3개를 찾고, 후보마다 카카오모빌리티 길찾기로 거리, 소요 시간, 통행료를 채운다. 길찾기가 실패한 후보는 직선거리와 평균 30km/h 추정으로 대신하고, 카카오 키가 없으면 가짜 목록이다. 실제 호출 확인은 전이다. 주변 장소 추천은 가짜 (`FakePlaceRepository`, 서울역 근처) |
+| `pickuplink` | 픽업 세션 만들기와 탑승자 문자 발송, 탑승자 위치 수신, 차량 위치 전송, 세션 취소 | 실제 (`PickupLinkRepositoryImpl`). 세션 생성·취소는 Picko 서버 REST, 탑승자 위치와 차량 위치는 WebSocket(`PickoVehicleSocket`)이다([picko-server-api](../references/picko-server-api.md)). 토큰은 `SessionTokenStorage`에 암호화해 둔다. 픽업 지점을 고르기 전의 링크 전송(주변 장소 추천 경로)은 가짜 (`FakePickupLinkRepository`). 차종과 번호판은 고정값이다([AGENTS](../../AGENTS.md)의 `TODO(vehicle-info)`) |
+| `route` | 지도에 그릴 차량·도보 경로와 목적지 경로 | 차량 경로는 실제 (`KakaoRouteRepository`, 카카오모빌리티 자동차 길찾기). 목적지 경로는 가짜 (`FakeRouteRepository`). 탑승자 도보는 경로선 없이 마커만 두고, 도보 시간은 직선거리 ÷ 분당 75m 추정(`estimateWalkMinutes`)이며 탑승자 위치(`observePassengerLocation`)가 올 때마다 갱신한다, 호출이 실패해도 차량 경로를 가짜로 대신한다 |
+| `navi` | 차량 내비(NaviHelper)에 소요 시간 묻기(`requestTrip`)와 내비 화면 띄우기(`requestNavigationScreen`), 목적지 안내 요청(`requestRoute`) | 실제 (`NaviHelperRepository`, 연결은 `NaviHelperConnection`). 경로 좌표는 받을 수 없어 지도 선은 `route`가 맡는다. 픽업 경로의 차량 소요 시간만 `FindPickupRoutesUseCase`가 내비 값으로 바꾼다. `목적지 안내하기`는 목적지 없이 내비 화면만 띄우고(`showNavigationScreen`) 앱은 흐름을 끝낸다. `startGuidance`(`requestRoute`)는 지금 부르는 곳이 없다 |
+
+## 네트워크 (`core/network`)
+
+OkHttp 5.5.0, Retrofit 3.0.0, kotlinx.serialization 컨버터를 쓴다. 호스트마다 Retrofit을 하나씩 두고 한정자로 구분한다.
+
+| 한정자 | 호스트 | 쓰는 곳 |
+| --- | --- | --- |
+| `@PickoServer` | `BuildConfig.BASE_URL`(`local.properties`의 `base.url`, 끝의 `/`는 자동으로 붙인다). 비어 있으면 서버 연결 시 오류 | `data/pickuplink`의 `PickoSessionApi`, `PickoVehicleSocket` |
+| `@KakaoMobility` | `https://apis-navi.kakaomobility.com/` | `data/route`의 `KakaoDirectionsApi` |
+| `@KakaoLocal` | `https://dapi.kakao.com/` | `data/place`의 `KakaoLocalApi` |
+
+| 규칙 | 내용 |
+| --- | --- |
+| API 정의 | `data/<기능>/datasource/`에 Retrofit 인터페이스(`XxxApi`)를 두고, 모듈(`di/`)이 `Retrofit.create`로 만든다 |
+| 카카오 키 | `KakaoAuthInterceptor`가 `BuildConfig.KAKAO_PLATFORM`을 `Authorization: KakaoAK` 헤더로 붙인다 |
+| 로그 | 디버그 빌드에서 메서드, 주소, 상태 코드만 남긴다(`Level.BASIC`). 본문에 토큰, 전화번호, 위치가 있어 본문 로그는 켜지 않는다 |
+| 오류 | 데이터 소스가 `HttpException`, `IOException`을 도메인 예외나 null로 바꿔 올린다 |
 
 ## 로컬 저장 (`core/localstorage`)
 
@@ -76,13 +93,27 @@ DataStore(Preferences)를 쓴다. 저장소 하나는 `@AppDataStore` 한정자�
 | 구현 | `XxxStorageImpl`. 키는 파일 안의 `private val`로 두고, 읽기 실패(`IOException`)는 기본값으로 처리한다 |
 | Hilt | `LocalStorageModule`이 `@Binds`로 인터페이스를 연결하고 `@Provides`로 DataStore를 만든다 |
 
+### 세션 토큰 저장
+
+| 구성 | 규칙 |
+| --- | --- |
+| `core/crypto` | `CryptoManager`. Android Keystore의 AES-256-GCM 키로 암호화한다. 용도는 `AadContext`로 묶는다 |
+| 저장소 | 토큰 전용 DataStore(`@SessionDataStore`, 파일 `picko_session_datastore`)를 따로 둔다. 백업과 기기 이전에서 제외하는 규칙(`backup_rules.xml`, `data_extraction_rules.xml`)이 이 파일 이름을 쓴다 |
+| 실패 처리 | 암호화에 실패하면 메모리에만 두고, 복호화할 수 없는 값은 지운다 |
+
 UseCase 조건: [domain-layer](domain-layer.md)
 
 ## 시연 차량 (디버그 전용)
 
 에뮬레이터의 내비는 위치를 받지 않아 이동에 따른 시간 변화를 볼 수 없다([pleos-sdk-index](../references/pleos-sdk-index.md)). 시연할 때는 `demo.drive`를 켠다. `local.properties`에 `demo.drive=true`를 쓰거나 `./gradlew installDebug -Pdemo.drive=true`로 설치한다. `BuildConfig.DEBUG`와 `DEMO_DRIVE`가 모두 참일 때만 동작해 릴리스에서는 켜지지 않는다.
 
-- `DemoVehicleRepository`(`data/vehicle`): 서울역에서 대치동 학원가 사거리까지 카카오모빌리티 자동차 경로의 좌표를 따라 40m/s로 1초마다 위치를 내보낸다(길찾기를 쓰지 못하면 가짜 직선 경로). `내비게이션 안내 시작`을 누르면(`VehicleRepository.onNavigationStarted`) 출발하고 끝에서 멈추며(그 전에는 출발지에 서 있다), 앱을 다시 시작하면 처음부터 간다. 지도에 그린 경로선과 같은 좌표라 마커가 선 위를 간다.
-- `DemoNaviRepository`(`data/navi`): 시연 차량의 현재 위치에서 목적지까지 직선거리를 같은 속도로 나눠 `previewTrip`의 시간과 거리를 돌려준다. `startGuidance`는 실제 내비에 맡긴다.
+- `DemoVehicleRepository`(`data/vehicle`): 서울역(앱을 시작했을 때의 출발지)에 서 있다가, `내비게이션 안내 시작`을 누르면(`VehicleRepository.onNavigationStarted(destination)`) 지금 위치에서 선택한 픽업 지점까지 카카오모빌리티 자동차 경로의 좌표를 따라 40m/s로 1초마다 위치를 내보낸다(길찾기를 쓰지 못하면 두 지점을 잇는 직선). 도착하면 멈추고, 안내를 다시 시작하면 지금 위치에서 새로 출발하며, 앱을 다시 시작하면 서울역으로 돌아간다. 지도에 그린 경로선과 같은 좌표라 마커가 선 위를 간다.
+- `DemoNaviRepository`(`data/navi`): 안내를 시작하기 전에는 `previewTrip`이 null을 돌려줘 경로 화면이 카카오 경로의 실제 소요 시간(예: 28분)을 그대로 보여 준다. 안내를 시작한 뒤(`DemoVehicleRepository.isDriving`)에는 시연 차량의 현재 위치에서 픽업 지점까지 직선거리를 시연 속도(40m/s)로 나눠 올린 값을 돌려주며, 10초마다 갱신돼 줄어든다. 안내 시작과 내비 화면 띄우기는 실제 내비에 맡긴다.
 - 바인딩은 `VehicleRepositoryModule`, `NaviRepositoryModule`이 조건으로 고른다.
 
+### 차량 도착 시간의 출처
+
+| 상황 | 경로 화면의 첫 값 | 안내 중 갱신(10초 간격) |
+| --- | --- | --- |
+| `demo.drive=true` (디버그 전용) | 카카오 경로의 소요 시간 | 시연 차량 위치 → 픽업 지점 직선거리 ÷ 40m/s (올림) |
+| `demo.drive`가 없거나 false | 차량 내비(NaviHelper) 값. 내비가 답하지 못하면 카카오 경로의 소요 시간 | 차량 내비 값만. 내비가 답하지 못한 주기는 건너뛰고 앞의 값을 유지한다(카카오 호출 수를 늘리지 않는다) |

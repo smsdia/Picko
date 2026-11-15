@@ -144,7 +144,6 @@ fun NavGraphBuilder.pickupNavGraph(
                 onNavigate = navController::navigateToStep,
                 onFlowFinished = onFlowFinished,
                 onPickupRequested = onPickupRequested,
-                onBack = { navController.popBackStack() },
             )
         }
 

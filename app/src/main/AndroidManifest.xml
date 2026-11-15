@@ -17,9 +17,10 @@
     <!-- 음성 안내(TextToSpeech SDK)로 결과를 소리로 알린다. -->
     <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
 
-    <!-- 차량 내비(NaviHelper)에 소요 시간을 묻고(NAVI_ROUTE) 경로 탐색과 안내를 요청한다(NAVI_ROUTE_SEARCH). -->
+    <!-- 차량 내비(NaviHelper)에 소요 시간을 묻고(NAVI_ROUTE) 경로 탐색과 안내를 요청하고(NAVI_ROUTE_SEARCH) 내비 화면을 띄운다(NAVI_CUSTOM_MAP). -->
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+    <uses-permission android:name="pleos.car.permission.NAVI_CUSTOM_MAP" />
 
     <application
         android:name=".PickoApplication"

@@ -43,6 +43,8 @@ class FindPickupRoutesUseCaseTest {
 
             override suspend fun startGuidance(destination: NaviDestinationModel): NaviGuidanceResult =
                 error("쓰지 않는다")
+
+            override suspend fun showNavigationScreen(): NaviGuidanceResult = error("쓰지 않는다")
         }
 
     private suspend fun FindPickupRoutesUseCase.find() = invoke(

@@ -2,8 +2,10 @@ package com.offcourse.picko.data.route.model
 
 import androidx.compose.runtime.Immutable
 import com.offcourse.picko.core.common.model.Coordinate
+import com.offcourse.picko.core.common.model.distanceMetersTo
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlin.math.roundToInt
 
 /** 지도에 선으로 그릴 경로. [points]는 출발지부터 도착지까지 순서대로 이어진다. */
 @Immutable
@@ -48,3 +50,10 @@ data class DestinationRoute(
     val route: RouteModel,
     val distanceKm: Int,
 )
+
+// 탑승자 웹(app.js)의 WALK_M_PER_MIN과 같은 값이다(시속 4.5km). 앱과 웹이 같은 도보 시간을 보이게 한다.
+private const val WALK_METERS_PER_MINUTE = 75.0
+
+/** 탑승자가 [from]에서 [to]까지 걷는 시간(분). 직선거리를 보행 속도로 나눈 추정이고 최소 1분이다. 탑승자 웹과 같은 식이다. */
+fun estimateWalkMinutes(from: Coordinate, to: Coordinate): Int =
+    (from.distanceMetersTo(to) / WALK_METERS_PER_MINUTE).roundToInt().coerceAtLeast(1)

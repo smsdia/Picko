@@ -1,18 +1,40 @@
 package com.offcourse.picko.data.pickuplink.di
 
+import com.offcourse.picko.core.network.di.PickoServer
+import com.offcourse.picko.data.pickuplink.datasource.PickoSessionApi
+import com.offcourse.picko.data.pickuplink.datasource.PickoSessionDataSource
+import com.offcourse.picko.data.pickuplink.datasource.PickoSessionSocket
+import com.offcourse.picko.data.pickuplink.datasource.PickoVehicleSocket
+import com.offcourse.picko.data.pickuplink.datasource.RetrofitPickoSessionDataSource
 import com.offcourse.picko.data.pickuplink.repository.PickupLinkRepository
-import com.offcourse.picko.data.pickuplink.repositoryimpl.FakePickupLinkRepository
+import com.offcourse.picko.data.pickuplink.repositoryimpl.PickupLinkRepositoryImpl
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import retrofit2.Retrofit
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class PickupLinkRepositoryModule {
-    // 링크 전달 방식과 탑승자 웹 페이지가 확정되면 이 바인딩을 실제 구현으로 교체한다.
     @Binds
     @Singleton
-    abstract fun bindPickupLinkRepository(impl: FakePickupLinkRepository): PickupLinkRepository
+    abstract fun bindPickupLinkRepository(impl: PickupLinkRepositoryImpl): PickupLinkRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPickoSessionDataSource(impl: RetrofitPickoSessionDataSource): PickoSessionDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindPickoSessionSocket(impl: PickoVehicleSocket): PickoSessionSocket
+
+    companion object {
+        @Provides
+        @Singleton
+        fun providePickoSessionApi(@PickoServer retrofit: Retrofit): PickoSessionApi =
+            retrofit.create(PickoSessionApi::class.java)
+    }
 }

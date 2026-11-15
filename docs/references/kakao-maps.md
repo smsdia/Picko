@@ -58,3 +58,8 @@
 - 연동: `data/route`의 `KakaoDirectionsDataSource`가 `GET /v1/directions`를 `HttpURLConnection`으로 부른다(새 의존성 없음). 헤더는 `Authorization: KakaoAK <REST 키>`이고 키는 `local.properties`의 `kakao.platform.key`(`BuildConfig.KAKAO_PLATFORM`)다. `origin`/`destination`은 `경도,위도` 순서다. 응답의 `routes[0].sections[].roads[].vertexes`(경도, 위도가 번갈아 놓인 1차원 배열)를 이어 경로선을 만들고, `result_code`가 0이 아니면 실패로 본다(`KakaoDirectionsDto.toRouteModel`).
 - 도보 길찾기(`/affiliate/walking/v1/directions`)는 제휴 파트너 전용이고 사전 제휴 계약이 필요하다(공식 페이지 `developers.kakaomobility.com/affiliate/walking/directions`, 확인일 2026-11-13). 그래서 탑승자 도보 경로와 목적지 경로는 `FakeRouteRepository` 값을 그대로 쓴다.
 - 호출이 실패하거나 키가 없으면 차량 경로도 가짜 값으로 대신한다(`KakaoRouteRepository`).
+
+## 로컬 키워드 검색과 요금 (`data/place`의 `KakaoLocalApi`)
+
+- 장소 검색은 `GET https://dapi.kakao.com/v2/local/search/keyword.json`(`Authorization: KakaoAK <REST 키>`)을 쓴다. 지도 SDK와 같은 "카카오맵" 서비스에 속해 카카오 디벨로퍼스의 앱 설정 `카카오맵 > 사용 설정`이 ON이어야 한다. 2024-12-01 이후 신규로 호출하는 앱은 필수이고, 꺼져 있으면 `OPEN_MAP_AND_LOCAL` 권한 오류로 403이 온다(카카오 데브톡 FAQ, 확인일 2026-11-15). 에뮬레이터에서 403을 확인했고 설정 확인 전이다.
+- 쿼터와 요금은 [kakao-api-quota](kakao-api-quota.md)에 둔다.

@@ -31,6 +31,15 @@ enum class PickupNotice {
     NaviRouteTooFar,
     NaviRouteTooClose,
     NaviRouteFailed,
+
+    /** 카카오 API 하루 한도에 닿아 장소 검색과 경로를 만들 수 없다. 알린 뒤 흐름을 끝낸다. */
+    KakaoQuotaExceeded,
+
+    /** 탑승자에게 링크를 보내지 못했다(문자 발송 실패, 서버 연결 실패). 다시 시도할 수 있다. */
+    LinkSendFailed,
+
+    /** 탑승자 위치를 기다리는 중에 서버가 세션을 끝냈다. 알린 뒤 흐름을 끝낸다. */
+    SessionEnded,
 }
 
 @Immutable

@@ -12,7 +12,7 @@
 
 ## 토큰과 세션
 
-- 토큰은 Android Keystore 등 안전한 저장소에 둔다.
+- 서버 세션 토큰은 Android Keystore의 AES-256-GCM 키로 암호화해 DataStore에 저장한다. 그 저장소는 백업과 기기 이전에서 제외한다([data-layer](architecture/data-layer.md#세션-토큰-저장)). 토큰과 탑승자 전화번호는 로그에 남기지 않는다.
 - 차량은 공유 기기다. 로그아웃과 계정 전환을 지원한다.
 - 탑승자 세션 토큰은 일회성이며 재사용하지 않는다.
 

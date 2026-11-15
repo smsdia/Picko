@@ -44,6 +44,13 @@ class SpokenPickupParserTest {
     }
 
     @Test
+    fun 장소_뒤의_앞은_뗀다() {
+        val result = parser.parse("엄마 성신여대입구역 앞에서 픽업해 줘")
+
+        assertEquals(PickupRequestModel(passenger = "엄마", place = "성신여대입구역"), result)
+    }
+
+    @Test
     fun 장소_뒤의_근처는_뗀다() {
         val result = parser.parse("엄마 강남역 근처에서 픽업해줘")
 

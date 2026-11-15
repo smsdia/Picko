@@ -4,13 +4,14 @@ import com.offcourse.picko.core.common.model.Coordinate
 import com.offcourse.picko.data.route.model.DestinationRoute
 import com.offcourse.picko.data.route.model.PickupRoutes
 import com.offcourse.picko.data.route.model.RouteModel
+import com.offcourse.picko.data.route.model.estimateWalkMinutes
 import com.offcourse.picko.data.route.repository.RouteRepository
 import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 길찾기 연동이 정해지기 전에 쓰는 가짜 구현.
- * 출발지와 도착지를 직각으로 꺾어 잇는 경로와 시안의 소요 시간을 돌려준다.
+ * 출발지와 도착지를 직각으로 꺾어 잇는 경로와 시안의 차량 소요 시간을 돌려준다. 탑승자 도보 시간은 직선거리로 추정한다.
  */
 class FakeRouteRepository @Inject constructor() : RouteRepository {
     override suspend fun findPickupRoutes(
@@ -24,7 +25,7 @@ class FakeRouteRepository @Inject constructor() : RouteRepository {
         ),
         passengerWalk = RouteModel(
             points = persistentListOf(passenger, cornerOf(passenger, pickup), pickup),
-            durationMinutes = PASSENGER_WALK_MINUTES,
+            durationMinutes = estimateWalkMinutes(passenger, pickup),
         ),
     )
 
@@ -45,7 +46,6 @@ class FakeRouteRepository @Inject constructor() : RouteRepository {
 
     private companion object {
         const val VEHICLE_ETA_MINUTES = 3
-        const val PASSENGER_WALK_MINUTES = 2
         const val DESTINATION_ETA_MINUTES = 12
         const val DESTINATION_DISTANCE_KM = 5
         const val DESTINATION_NAME = "선릉역"

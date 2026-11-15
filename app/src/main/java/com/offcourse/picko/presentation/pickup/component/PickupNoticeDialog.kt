@@ -1,5 +1,6 @@
 package com.offcourse.picko.presentation.pickup.component
 
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -24,6 +25,7 @@ fun PickupNoticeDialog(
     if (notice == null) return
 
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val requestLocationPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { viewModel.onNoticeRetry() }
@@ -46,7 +48,13 @@ fun PickupNoticeDialog(
             onSecondary = { viewModel.onLocationPrivacyCheckClicked(context) }
         }
 
-        PickupNotice.NaviUnavailable, PickupNotice.NaviRouteFailed -> {
+        // 내비에 연결하지 못하면 이 앱으로 할 수 있는 일이 없어 앱을 종료한다.
+        PickupNotice.NaviUnavailable -> {
+            onPrimary = { activity?.finishAffinity() }
+            onSecondary = dismiss
+        }
+
+        PickupNotice.NaviRouteFailed, PickupNotice.LinkSendFailed -> {
             onPrimary = viewModel::onNoticeRetry
             onSecondary = dismiss
         }
@@ -55,6 +63,8 @@ fun PickupNoticeDialog(
         PickupNotice.NaviLowBattery,
         PickupNotice.NaviRouteTooFar,
         PickupNotice.NaviRouteTooClose,
+        PickupNotice.KakaoQuotaExceeded,
+        PickupNotice.SessionEnded,
         -> {
             onPrimary = dismiss
             onSecondary = dismiss
@@ -103,8 +113,7 @@ private fun PickupNotice.content(): NoticeContent = when (this) {
     PickupNotice.NaviUnavailable -> NoticeContent(
         title = R.string.notice_navi_unavailable_title,
         description = R.string.notice_navi_unavailable_description,
-        primary = R.string.notice_retry,
-        secondary = R.string.notice_close,
+        primary = R.string.notice_exit_app,
     )
 
     PickupNotice.NaviLowBattery -> NoticeContent(
@@ -130,5 +139,24 @@ private fun PickupNotice.content(): NoticeContent = when (this) {
         description = R.string.notice_navi_route_failed_description,
         primary = R.string.notice_retry,
         secondary = R.string.notice_close,
+    )
+
+    PickupNotice.KakaoQuotaExceeded -> NoticeContent(
+        title = R.string.notice_kakao_quota_title,
+        description = R.string.notice_kakao_quota_description,
+        primary = R.string.notice_confirm,
+    )
+
+    PickupNotice.LinkSendFailed -> NoticeContent(
+        title = R.string.notice_link_send_failed_title,
+        description = R.string.notice_link_send_failed_description,
+        primary = R.string.notice_retry,
+        secondary = R.string.notice_close,
+    )
+
+    PickupNotice.SessionEnded -> NoticeContent(
+        title = R.string.notice_session_ended_title,
+        description = R.string.notice_session_ended_description,
+        primary = R.string.notice_confirm,
     )
 }

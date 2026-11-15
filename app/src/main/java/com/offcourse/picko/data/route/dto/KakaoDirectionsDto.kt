@@ -24,6 +24,13 @@ data class KakaoDirectionsDto(
     data class Summary(
         val distance: Int = 0,
         val duration: Int = 0,
+        val fare: Fare? = null,
+    )
+
+    /** [toll]은 통행료(원). 없으면 0이다. */
+    @Serializable
+    data class Fare(
+        val toll: Int = 0,
     )
 
     @Serializable
@@ -57,5 +64,25 @@ fun KakaoDirectionsDto.toRouteModel(): RouteModel? {
     return RouteModel(
         points = points.toImmutableList(),
         durationMinutes = (seconds + SECONDS_PER_MINUTE / 2) / SECONDS_PER_MINUTE,
+    )
+}
+
+/** 길찾기 결과의 거리, 시간, 통행료. */
+data class TripSummary(
+    val distanceMeters: Int,
+    val durationSeconds: Int,
+    // 0이면 통행료가 없다.
+    val tollWon: Int,
+)
+
+/** 첫 번째 경로의 요약. 실패한 응답이면 null. */
+fun KakaoDirectionsDto.toTripSummary(): TripSummary? {
+    val route = routes.firstOrNull()?.takeIf { it.result_code == RESULT_CODE_SUCCESS } ?: return null
+    val summary = route.summary ?: return null
+
+    return TripSummary(
+        distanceMeters = summary.distance,
+        durationSeconds = summary.duration,
+        tollWon = summary.fare?.toll ?: 0,
     )
 }

@@ -1,9 +1,10 @@
 package com.offcourse.picko.presentation.pickup.nearby
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -40,7 +41,6 @@ fun NearbyRoute(
     onNavigate: (PickupStep) -> Unit,
     onFlowFinished: () -> Unit,
     onPickupRequested: (PickupRequestModel) -> Unit,
-    onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -51,10 +51,12 @@ fun NearbyRoute(
         onPickupRequested = onPickupRequested,
     )
 
+    // 탑승자의 위치를 받은 뒤라 흐름이 끝날 때까지 뒤로 갈 수 없다.
+    BackHandler(onBack = {})
+
     NearbyScreen(
         state = state,
         onPlaceClick = viewModel::onNearbySelected,
-        onBackClick = onBack,
         onSpeakAgainClick = viewModel::onVoiceRetryRequested,
         onVoiceRetryMicClick = viewModel::onVoiceRetryMicClicked,
         onVoiceAnnounce = viewModel::onVoiceAnnounce,
@@ -68,7 +70,6 @@ fun NearbyRoute(
 private fun NearbyScreen(
     state: PickupFlowState,
     onPlaceClick: (PlaceModel) -> Unit,
-    onBackClick: () -> Unit,
     onSpeakAgainClick: () -> Unit,
     onVoiceRetryMicClick: () -> Unit,
     onVoiceAnnounce: (String) -> Unit,
@@ -114,19 +115,12 @@ private fun NearbyScreen(
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                PickoButton(
-                    text = stringResource(R.string.pickup_back),
-                    onClick = onBackClick,
-                    modifier = Modifier.weight(1f),
-                )
-                PickoButton(
-                    text = stringResource(R.string.pickup_speak_again),
-                    onClick = onSpeakAgainClick,
-                    modifier = Modifier.weight(1f),
-                    type = PickoButtonType.Secondary,
-                )
-            }
+            PickoButton(
+                text = stringResource(R.string.pickup_speak_again),
+                onClick = onSpeakAgainClick,
+                modifier = Modifier.fillMaxWidth(),
+                type = PickoButtonType.Secondary,
+            )
         }
     }
 }
@@ -166,7 +160,6 @@ private fun NearbyScreenPreview() {
                 ),
             ),
             onPlaceClick = {},
-            onBackClick = {},
             onSpeakAgainClick = {},
             onVoiceRetryMicClick = {},
             onVoiceAnnounce = {},

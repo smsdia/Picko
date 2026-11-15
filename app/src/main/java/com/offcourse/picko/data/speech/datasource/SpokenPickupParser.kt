@@ -10,7 +10,8 @@ private val PickupVerb = Regex("픽업|태우|태워|태울|데리러|데려|모
 private val WakeWord = Regex("^(글레오|gleo)\\s*야?\\s*[,，]?\\s*", RegexOption.IGNORE_CASE)
 private val LeadingFiller = Regex("^(지금|저기|음|어|그|좀)\\s+")
 private val PassengerParticle = Regex("(을|를|와|과|한테|에게|께)$")
-private val PlaceSuffix = Regex("\\s*(근처|부근|주변)$")
+// "강남역 앞에서"처럼 장소 뒤에 붙는 위치 표현. 남기면 카카오 장소 검색에서 결과가 나오지 않는다.
+private val PlaceSuffix = Regex("\\s*(근처|부근|주변|앞)$")
 private const val PLACE_MARKER = "에서"
 
 /**
@@ -19,6 +20,7 @@ private const val PLACE_MARKER = "에서"
  * | 문장 | 탑승자 | 장소 |
  * | --- | --- | --- |
  * | 엄마 강남역에서 픽업해줘 | 엄마 | 강남역 |
+ * | 엄마 강남역 앞에서 픽업해줘 | 엄마 | 강남역 |
  * | 대치동 학원가에서 현대를 태울 거야 | 현대 | 대치동 학원가 |
  * | 아빠 태우러 가줘 | 아빠 | (없음) |
  * | 현대와 만나기로 했는데 픽업 장소 정해줘 | 현대 | (없음) |
