@@ -53,11 +53,50 @@ class PickupLinkRepositoryImplTest {
     }
 
     @Test
-    fun `문자가 가지 않으면 예외를 던지되 토큰은 남겨 취소할 수 있다`() = runBlocking {
+    fun `문자가 가지 않으면 세션을 바로 닫고 예외를 던진다`() {
         dataSource.smsSent = false
 
         assertThrows(SmsNotSentException::class.java) { runBlocking { repository.sendLink(contact, pickup) } }
+        assertEquals("sms_failed", dataSource.canceled.single().reason)
+        assertNull(storage.token)
+    }
+
+    @Test
+    fun `문자 실패 세션을 닫지 못하면 토큰을 남겨 다음에 정리한다`() {
+        dataSource.smsSent = false
+        dataSource.cancelError = PickoServerException(code = null, message = "연결 실패")
+
+        assertThrows(SmsNotSentException::class.java) { runBlocking { repository.sendLink(contact, pickup) } }
         assertEquals("token-1", storage.token)
+    }
+
+    @Test
+    fun `흐름이 끝났는데 세션이 열려 있으면 백그라운드에서 닫는다`() = runBlocking {
+        storage.token = "t"
+
+        repository.abandonSession()
+        waitUntil { dataSource.canceled.isNotEmpty() && storage.token == null }
+
+        assertEquals("flow_abandoned", dataSource.canceled.single().reason)
+        assertNull(storage.token)
+    }
+
+    @Test
+    fun `세션이 없으면 흐름이 끝나도 서버를 부르지 않는다`() = runBlocking {
+        repository.abandonSession()
+        Thread.sleep(200)
+
+        assertTrue(dataSource.canceled.isEmpty())
+    }
+
+    @Test
+    fun `닫는 동안 새 세션 토큰이 저장되면 새 토큰은 지우지 않는다`() = runBlocking {
+        storage.token = "old"
+        dataSource.onCancel = { storage.token = "new" }
+
+        repository.completeSession()
+
+        assertEquals("new", storage.token)
     }
 
     @Test
@@ -255,6 +294,7 @@ class PickupLinkRepositoryImplTest {
         val canceled = mutableListOf<CancelSessionRequestDto>()
         var smsSent = true
         var cancelError: PickoServerException? = null
+        var onCancel: () -> Unit = {}
 
         override suspend fun createSession(request: CreateSessionRequestDto): SessionResponseDto {
             created += request
@@ -263,7 +303,14 @@ class PickupLinkRepositoryImplTest {
 
         override suspend fun cancelSession(request: CancelSessionRequestDto) {
             canceled += request
+            onCancel()
             cancelError?.let { throw it }
         }
+    }
+
+    // 백그라운드 코루틴이 끝나기를 짧게 기다린다.
+    private fun waitUntil(condition: () -> Boolean) {
+        val deadline = System.currentTimeMillis() + 3_000
+        while (!condition() && System.currentTimeMillis() < deadline) Thread.sleep(20)
     }
 }

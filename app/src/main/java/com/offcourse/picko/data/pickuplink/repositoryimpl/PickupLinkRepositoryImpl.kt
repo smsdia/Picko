@@ -15,12 +15,16 @@ import com.offcourse.picko.data.pickuplink.repository.PickupLinkRepository
 import com.offcourse.picko.data.place.model.PlaceModel
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 // TODO(vehicle-info): 서버의 vehicleModel, vehiclePlate가 필수인데 Pleos SDK 공식 문서에서 차종과 번호판을 주는
@@ -32,6 +36,8 @@ private const val TEMPORARY_VEHICLE_PLATE = "123가 4567"
 private const val METERS_PER_KM = 1_000.0
 private const val CANCEL_REASON = "driver_canceled"
 private const val COMPLETE_REASON = "pickup_completed"
+private const val SMS_FAILED_REASON = "sms_failed"
+private const val ABANDON_REASON = "flow_abandoned"
 private const val HTTP_SERVER_ERROR_MIN = 500
 
 /**
@@ -48,6 +54,9 @@ class PickupLinkRepositoryImpl @Inject constructor(
     private val socket: PickoSessionSocket,
     private val fallback: FakePickupLinkRepository,
 ) : PickupLinkRepository {
+    // 흐름을 맡은 ViewModel이 사라져도 세션 닫기를 끝낼 수 있게 앱 수명 동안 사는 범위를 따로 둔다.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     @Volatile
     private var sessionPickup: Coordinate? = null
 
@@ -69,7 +78,15 @@ class PickupLinkRepositoryImpl @Inject constructor(
         tokenStorage.save(response.token)
         sessionPickup = pickup.coordinate
 
-        if (!response.smsSent) throw SmsNotSentException(response.smsDetail)
+        if (!response.smsSent) {
+            // 탑승자에게 문자가 가지 않은 세션은 쓸 수 없다. 서버에 남기지 않고 바로 닫는다. 닫지 못해도 토큰이 남아 다음 전송 때 정리된다.
+            try {
+                closeSession(SMS_FAILED_REASON)
+            } catch (e: PickoServerException) {
+                Timber.w(e, "문자 발송에 실패한 세션을 닫지 못했다")
+            }
+            throw SmsNotSentException(response.smsDetail)
+        }
 
         socket.connect(response.token)
     }
@@ -103,6 +120,17 @@ class PickupLinkRepositoryImpl @Inject constructor(
 
     override suspend fun completeSession() = closeSession(COMPLETE_REASON)
 
+    override fun abandonSession() {
+        scope.launch {
+            try {
+                closeSession(ABANDON_REASON)
+            } catch (e: PickoServerException) {
+                // 닫지 못하면 토큰이 남아 다음 링크 전송 때 정리된다.
+                Timber.w(e, "남은 세션을 닫지 못했다")
+            }
+        }
+    }
+
     private suspend fun closeSession(reason: String) {
         val token = tokenStorage.get() ?: return
 
@@ -116,8 +144,11 @@ class PickupLinkRepositoryImpl @Inject constructor(
             if (e.code == null || e.code >= HTTP_SERVER_ERROR_MIN) throw e
         }
 
-        tokenStorage.clear()
-        sessionPickup = null
+        // 닫는 동안 새 세션이 저장됐다면 그 토큰을 지우지 않는다.
+        if (tokenStorage.get() == token) {
+            tokenStorage.clear()
+            sessionPickup = null
+        }
     }
 
     private fun PlaceModel.toRequest(contact: ContactModel) = CreateSessionRequestDto(

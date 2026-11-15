@@ -14,6 +14,8 @@
 
 - 문자는 서버가 SOLAPI로 보낸다. 서버 아웃바운드 IP가 SOLAPI에 등록되어 있지 않으면 `smsSent=false`, `smsDetail`에 `http_403`이 온다(2026-11-15 확인).
 - 서버에 세션 완료 API가 없어 픽업 완료도 취소 API로 닫는다. 탑승자 웹은 사유와 상관없이 "운전자 요청으로 픽업이 취소되었어요"를 보여 준다(`handleCanceled`, 2026-11-15 `app.js`). 소켓만 닫으면 웹은 세션이 계속 열려 있는 것으로 보인다.
+- 앱이 세션을 닫는 경우(모두 `POST /api/sessions/cancel`, 사유로 구분한다): 운전자 취소 `driver_canceled`, 픽업 완료 `pickup_completed`, 문자 발송 실패 `sms_failed`(세션을 만든 직후 바로 닫는다), 흐름이 끝났는데 열려 있던 세션 `flow_abandoned`(ViewModel이 사라질 때 백그라운드에서 닫는다)
+- 앱이 죽거나 네트워크가 끊겨 닫지 못한 세션은 토큰이 남아 다음 링크 전송 때 정리된다. 앱 쪽에서 막을 수 없어 서버가 차량 WebSocket이 끊긴 세션을 일정 시간 뒤 닫아 주는 정책이 필요하다(서버에 요청 필요, 세션 유효 시간은 확인하지 못했다)
 - 스웨거에 `POST /api/sessions/redeem`, `GET /api/sessions/me`가 있지만 탑승자 웹용이라 앱은 쓰지 않는다.
 
 ## WebSocket (`wss://<서버 호스트>/ws/vehicle?token=<세션 토큰>`)

@@ -32,6 +32,8 @@ class FakePickupLinkRepository @Inject constructor() : PickupLinkRepository {
 
     override suspend fun completeSession() = Unit
 
+    override fun abandonSession() = Unit
+
     private companion object {
         const val SEND_DELAY_MILLIS = 300L
         const val LOCATION_SHARE_DELAY_MILLIS = 3_000L

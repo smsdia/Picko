@@ -32,4 +32,10 @@ interface PickupLinkRepository {
      * 그래서 탑승자 웹에는 "운전자 요청으로 픽업이 취소되었어요"가 뜬다. 세션이 없으면 아무것도 하지 않는다.
      */
     suspend fun completeSession()
+
+    /**
+     * 흐름이 끝났는데 세션이 닫히지 않은 채 남지 않게, 열려 있는 세션이 있으면 백그라운드에서 서버에 닫는다.
+     * 호출한 쪽(ViewModel)이 사라져도 이어서 실행된다. 세션이 없거나 이미 닫혔으면 아무것도 하지 않고, 실패해도 예외를 던지지 않는다.
+     */
+    fun abandonSession()
 }

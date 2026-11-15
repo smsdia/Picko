@@ -582,6 +582,13 @@ class PickupFlowViewModel @Inject constructor(
         _sideEffect.trySend(PickupFlowSideEffect.NavigateTo(step))
     }
 
+    // 흐름이 끝났는데 닫히지 않은 세션(다시 말해서 새 흐름을 시작한 경우, 중간에 홈으로 돌아간 경우 등)을 닫는다.
+    // 취소와 완료로 이미 닫혔으면 아무것도 하지 않는다. 앱이 죽는 경우는 이 코드가 실행되지 않는다.
+    override fun onCleared() {
+        pickupLinkRepository.abandonSession()
+        super.onCleared()
+    }
+
     private fun finishFlow() {
         etaJob?.cancel()
         locationJob?.cancel()
