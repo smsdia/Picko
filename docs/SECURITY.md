@@ -8,6 +8,7 @@
 - 카카오모빌리티 길찾기 REST API 키는 `local.properties`의 `kakao.platform.key`에만 두고 `BuildConfig.KAKAO_PLATFORM`으로 주입한다(`KakaoDirectionsDataSource`의 `Authorization: KakaoAK` 헤더). 키가 없으면 길찾기를 건너뛰고 가짜 경로를 쓴다.
 - 카카오 네이티브 앱 키는 `local.properties`의 `kakao.native.key`에만 두고 `BuildConfig.KAKAO_NATIVE`로 주입한다. 카카오 지도 SDK는 디버그 로그(logcat)에 인증 요청 헤더의 앱 키를 출력하므로, 로그를 공유하거나 첨부하기 전에 확인한다.
 - Pleos Maven 저장소에 인증이 필요하면 그 값도 `local.properties` 또는 사용자 Gradle 설정에 두고, 저장소 파일에는 올리지 않는다.
+- release 서명 정보는 `local.properties`(또는 CI의 `-P`)에만 둔다: `release.store.password`, `release.key.alias`, `release.key.password`, 선택으로 `release.store.file`(기본 `keystore/picko_release_key.jks`). 키스토어(`*.jks`)는 `.gitignore`로 제외되어 있고 저장소에 올리지 않는다. 키스토어와 값이 모두 있을 때만 서명하고, 없으면 서명되지 않은 release APK가 만들어지며 빌드는 통과한다.
 - 이 규칙을 어긴 변경은 완료로 보지 않는다.
 
 ## 토큰과 세션
