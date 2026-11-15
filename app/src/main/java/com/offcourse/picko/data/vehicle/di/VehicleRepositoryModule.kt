@@ -20,5 +20,5 @@ object VehicleRepositoryModule {
     fun provideVehicleRepository(
         fused: Provider<FusedLocationVehicleRepository>,
         demo: Provider<DemoVehicleRepository>,
-    ): VehicleRepository = if (BuildConfig.DEBUG && BuildConfig.DEMO_DRIVE) demo.get() else fused.get()
+    ): VehicleRepository = if (BuildConfig.DEMO_DRIVE) demo.get() else fused.get()
 }

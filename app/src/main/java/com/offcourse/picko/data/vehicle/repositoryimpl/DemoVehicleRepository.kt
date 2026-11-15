@@ -29,7 +29,7 @@ private val DemoOrigin = Coordinate(37.5547, 126.9707)
  * 시연용 가짜 차량. 내비게이션 안내 시작을 누르면 지금 위치에서 선택한 픽업 지점까지 카카오모빌리티 자동차 경로의 좌표를
  * 일정한 속도로 따라가며 위치를 1초마다 내보내고, 도착하면 멈춘다. 길찾기를 쓰지 못하면 두 지점을 잇는 직선을 따라간다.
  * 안내를 다시 시작하면 지금 위치에서 새로 출발하고, 앱을 다시 시작하면 처음 출발지로 돌아간다.
- * 디버그 빌드에서 `demo.drive`가 켜졌을 때만 쓴다.
+ * 빌드 종류와 상관없이 `demo.drive`가 켜졌을 때만 쓴다. 제출·배포용 빌드는 `-Pdemo.drive=false`로 꺼서 만든다.
  */
 @Singleton
 class DemoVehicleRepository @Inject constructor(

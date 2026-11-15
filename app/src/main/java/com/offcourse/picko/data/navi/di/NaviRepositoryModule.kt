@@ -20,5 +20,5 @@ object NaviRepositoryModule {
     fun provideNaviRepository(
         real: Provider<NaviHelperRepository>,
         demo: Provider<DemoNaviRepository>,
-    ): NaviRepository = if (BuildConfig.DEBUG && BuildConfig.DEMO_DRIVE) demo.get() else real.get()
+    ): NaviRepository = if (BuildConfig.DEMO_DRIVE) demo.get() else real.get()
 }
